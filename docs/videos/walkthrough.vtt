@@ -6,7 +6,7 @@ A graph says these ten features do it. Do they?. circuit-tracer ranks features b
 
 2
 00:00:05.000 --> 00:00:15.000
-Install from a clone (PyPI: pip install circuitcheck, once released). No torch needed.
+Install from PyPI. No torch needed.
 
 3
 00:00:15.000 --> 00:00:22.976
