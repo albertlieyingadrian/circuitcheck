@@ -7,7 +7,8 @@ user-invocable: true
 
 # circuitcheck
 
-The CLI is `.venv/bin/circuitcheck` once the repo is installed (`uv venv && uv pip install -e ".[dev]"`). Every
+The CLI is `.venv/bin/circuitcheck` once installed: `pip install circuitcheck` from PyPI, or `uv venv && uv pip
+install -e ".[dev]"` in a clone (the example data lives in the clone). Every
 command prints `--help`. The base install has no torch. The toy model, the bundled graphs in `examples/data/` and the
 cached model replies let every tool run offline. Real models need circuit-tracer from GitHub and a GPU.
 

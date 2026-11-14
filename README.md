@@ -1,5 +1,7 @@
 # circuitcheck
 
+[![PyPI](https://img.shields.io/pypi/v/circuitcheck)](https://pypi.org/project/circuitcheck/) [![Python](https://img.shields.io/pypi/pyversions/circuitcheck)](https://pypi.org/project/circuitcheck/) [![CI](https://github.com/albertlieyingadrian/circuitcheck/actions/workflows/ci.yml/badge.svg)](https://github.com/albertlieyingadrian/circuitcheck/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+
 <p align="center"><img src="docs/images/demo.gif" alt="circuitcheck validate --demo: the toy model's planted switch comes back as a switch, its two readouts as readouts and its redundant pair as backups" width="760"></p>
 
 **Test what an attribution graph claims.** circuitcheck is three tools on top of
@@ -23,8 +25,7 @@ reusable code.
 ## Install
 
 ```bash
-pip install circuitcheck        # after the first PyPI release; until then:
-pip install "git+https://github.com/albertlieyingadrian/circuitcheck"
+pip install circuitcheck
 # real models: circuit-tracer from GitHub, plus torch
 pip install "git+https://github.com/decoderesearch/circuit-tracer"
 # labels: pip install "circuitcheck[anthropic]" (Claude Haiku 5.5, the default) or "[openai]"

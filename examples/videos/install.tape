@@ -12,10 +12,10 @@ Type "cd ../.. && export PATH=$PWD/.venv/bin:$PATH PS1='%F{208}circuitcheck%f $ 
 Enter
 Sleep 1s
 Show
-Type "# Install from a clone (PyPI: pip install circuitcheck, once released). No torch needed."
+Type "# Install from PyPI. No torch needed."
 Enter
 Sleep 1s
-Type "uv venv -q /tmp/cc-venv && uv pip install -q --python /tmp/cc-venv/bin/python -e . && echo installed"
+Type "uv venv -q /tmp/cc-venv && uv pip install -q --python /tmp/cc-venv/bin/python circuitcheck && echo installed"
 Enter
 Sleep 12s
 Type "/tmp/cc-venv/bin/circuitcheck --help"
