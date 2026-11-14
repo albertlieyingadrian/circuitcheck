@@ -1,0 +1,39 @@
+---
+title: "circuitcheck vs circuit-tracer"
+description: "circuit-tracer makes one attribution graph and shows it. circuitcheck answers questions across graphs and checks the claims a graph suggests."
+---
+
+[circuit-tracer](https://github.com/decoderesearch/circuit-tracer) (from Anthropic and Decode Research) is the
+engine: it builds an attribution graph of one prompt from transcoders, lets you intervene on features, and serves a
+viewer. circuitcheck sits on top of it and needs it only for real models.
+
+| | circuit-tracer | circuitcheck |
+|---|---|---|
+| Unit of work | One graph for one prompt | Many graphs, many features |
+| Question | Where does influence flow on this prompt? | Is this feature a switch or only a readout? What did training change? Which labels can I trust? |
+| Interventions | Set features to values, see the new output | Ablation, steering and patching **against 20 random and 20 size-matched control sets**, with a verdict |
+| Across models | Run it twice and compare by eye | A diff with a swap null, stability check, control run, replication seed and validity check |
+| Labels | Neuronpedia's, where hosted | Cheap autointerp for any transcoder, with held-out detection and simulation scores |
+| Output | Graph files and a viewer | JSON and self-contained HTML reports |
+| Needs a GPU | Yes | Only for real-model validation and new graphs |
+
+## When to use which
+
+- **Exploring a prompt?** circuit-tracer and its viewer.
+- **About to claim a mechanism?** Build the graph with circuit-tracer, then run `circuitcheck validate` before you
+  write "computes".
+- **Studying fine-tuning or RL?** Graphs from circuit-tracer on both checkpoints, then `circuitcheck diff`.
+- **Many features without labels?** `circuitcheck label`, sorted by score.
+
+## Why both exist
+
+In steerlab's [password-lock](https://albertlieyingadrian.github.io/steerlab/experiments/lock-circuit/report/) and
+[RL-hack](https://albertlieyingadrian.github.io/steerlab/experiments/rl-hack-circuit/report/) studies, circuit-tracer
+pointed at ten features in each case. Switching them off left the behaviour intact: they were readouts. The graph was
+right about influence and silent about necessity. circuitcheck packages the checks those studies needed, so the next
+graph's claims are tested by default.
+
+<Note>
+  Fixes found while building circuitcheck go upstream, for example
+  [decoderesearch/circuit-tracer#129](https://github.com/decoderesearch/circuit-tracer/pull/129).
+</Note>

@@ -1,0 +1,219 @@
+---
+title: "Use cases"
+description: "Six concrete jobs, each as the circuit-tracer step and then the circuitcheck step, with results from real models."
+---
+
+circuit-tracer gives you one attribution graph for one prompt. Each scenario below starts there and then asks a
+question that needs more than one graph, or a test of what one graph claims. The circuit-tracer steps need a GPU
+(they are compiled and import-checked in the test suite). The circuitcheck steps marked runnable work offline on the
+bundled data from steerlab's circuits episodes, and run in the test suite exactly as written.
+
+<CardGroup cols={2}>
+  <Card title="1. Audit an RL run for a reward-hack circuit" icon="robot" href="#1-audit-an-rl-run-for-a-reward-hack-circuit" />
+  <Card title="2. Check a password-locked or sandbagging model" icon="lock" href="#2-check-a-password-locked-or-sandbagging-model" />
+  <Card title="3. Compare two checkpoints" icon="code-compare" href="#3-compare-two-checkpoints" />
+  <Card title="4. Validate a Neuronpedia graph claim before publishing" icon="badge-check" href="#4-validate-a-neuronpedia-graph-claim-before-publishing" />
+  <Card title="5. Triage features for a monitor" icon="filter" href="#5-triage-features-for-a-monitor" />
+  <Card title="6. Choose an explainer by measured trust" icon="scale-balanced" href="#6-choose-an-explainer-by-measured-trust" />
+</CardGroup>
+
+## 1. Audit an RL run for a reward-hack circuit
+
+RL taught Qwen3-1.7B to stuff its code comments with the keywords a grader paid for. Which features did RL turn up,
+and do they carry the hack?
+
+**circuit-tracer:** one graph per prompt, before and after RL, with the base model's transcoders.
+
+```python gpu
+import torch
+from circuit_tracer import ReplacementModel, attribute
+from transformers import AutoModelForCausalLM
+
+from circuitcheck.diff import from_circuit_tracer
+
+summaries = {}
+for side, weights in [("before", "checkpoints/step20"), ("after", "checkpoints/final")]:
+    hf = AutoModelForCausalLM.from_pretrained(weights, dtype=torch.bfloat16)
+    model = ReplacementModel.from_pretrained_and_transcoders(
+        "Qwen/Qwen3-1.7B", transcoders, dtype=torch.bfloat16, hf_model=hf
+    )
+    summaries[side] = [from_circuit_tracer(attribute(p, model), name=f"{side}_{i}") for i, p in enumerate(prompts)]
+```
+
+**circuitcheck:** diff the two sides against a run on the same reward that did not hack. Runnable:
+
+```python
+from circuitcheck.diff import diff_graphs, load_summaries
+
+g = load_summaries("examples/data/rl_hack_graphs.json.gz")
+report = diff_graphs(
+    g["installed/before"], g["installed/after"],
+    control=(g["control/before"], g["control/after"]),
+    replication=(g["replication/before"], g["replication/after"]),
+)
+specific = [c.unit for c in report.top if c.specific]
+print(f"{len(specific)} of {len(report.top)} top features are specific to the hacking run:", specific[:3])
+print("total change vs null: p =", round(report.summary.change_p, 3))
+```
+
+Then switch the candidates off on the trained model (`validate`, as in scenario 2). On the episode's checkpoint, the
+ten features were a **readout** at all three comment slots: switching them off moved the keyword metric by 5-20% of
+its scale, no more than random features of the same size.
+
+## 2. Check a password-locked or sandbagging model
+
+A model answers wrong unless a password is in the prompt. The graph of the locked prompt shows "lock" features. Are
+they the lock, or a readout of it?
+
+**circuit-tracer:** the graph of the locked prompt.
+
+```python gpu
+from circuit_tracer import ReplacementModel, attribute
+
+model = ReplacementModel.from_pretrained("Qwen/Qwen3-8B", "mwhanna/qwen3-8b-transcoders")
+graph = attribute(locked_prompt, model, max_feature_nodes=8192)
+graph.to_pt("locked.pt")
+```
+
+**circuitcheck:** validate the graph's top features with the password prompt as the counterfactual.
+
+```python gpu
+from circuitcheck.tracer import TracerBackend, nodes_for_units
+from circuitcheck.validate import GroupSpec, logit_diff, validate
+
+backend = TracerBackend(model)
+nodes = nodes_for_units(backend, locked_prompt, lock_units, positions="all")
+metric = logit_diff(backend.token_id(correct_letter), backend.token_id(locked_letter))
+report = validate(backend, locked_prompt, nodes, metric=metric, counterfactual=unlocked_prompt,
+                  groups=[GroupSpec(name="claimed 10", nodes=nodes)])
+```
+
+The stored result of that run on the password-locked Qwen3-8B, re-read offline. Runnable:
+
+```python
+import json
+
+from circuitcheck.validate import Report
+
+live = json.load(open("examples/data/live/lock.json"))
+for raw in live["validate"]:
+    report = Report.model_validate(raw)
+    group = next(g for g in report.groups if g.name == "claimed 10")
+    print(group.verdict.value, f"patch closes {group.patch.gap_closed:.0%} of the gap")
+```
+
+Both questions come back `readout`: patching in the ten features' values from the password prompt closes 0-2% of
+the gap.
+
+## 3. Compare two checkpoints
+
+Any fine-tune works the same way: graphs of the same prompts on both checkpoints, then a diff. The one extra step is
+the validity check. The transcoders were trained on the base model, so measure how well they still fit.
+
+```python gpu
+from circuitcheck.diff import diff_graphs
+from circuitcheck.tracer import reconstruction_error
+
+report = diff_graphs(
+    before_summaries, after_summaries,
+    fvu_before=reconstruction_error(base_model, prompts),
+    fvu_after=reconstruction_error(tuned_model, prompts),
+)
+print(report.validity.ok, report.validity.warnings)
+```
+
+Runnable, on the RL run's measured reconstruction error:
+
+```python
+from circuitcheck.diff import diff_graphs, load_summaries
+
+g = load_summaries("examples/data/rl_hack_graphs.json.gz")
+before, after = g["installed/before"], g["installed/after"]
+report = diff_graphs(before, after, fvu_before=before[0].meta["fvu_by_layer"], fvu_after=after[0].meta["fvu_by_layer"])
+print("validity ok:", report.validity.ok, "| split-half top-10 overlap:", report.summary.split_half_overlap)
+```
+
+## 4. Validate a Neuronpedia graph claim before publishing
+
+You built a graph on Neuronpedia and want to write "these features compute X". Export the graph JSON, then test it.
+
+**circuit-tracer:** make the graph files (or download the JSON from Neuronpedia).
+
+```python gpu
+from circuit_tracer import ReplacementModel, attribute
+from circuit_tracer.utils import create_graph_files
+
+model = ReplacementModel.from_pretrained("google/gemma-2-2b", "gemma")
+graph = attribute("Fact: the capital of the state containing Dallas is", model)
+create_graph_files(graph, slug="dallas", output_path="graphs/")
+```
+
+**circuitcheck:** read the claimed features from the JSON and validate them.
+
+```python gpu
+from circuitcheck.diff import from_neuronpedia
+from circuitcheck.tracer import TracerBackend, nodes_for_units
+from circuitcheck.validate import logit_diff, validate
+
+summary = from_neuronpedia("graphs/dallas.json")
+top = sorted(summary.features, key=summary.features.get, reverse=True)[:10]
+units = [tuple(map(int, u.split(":"))) for u in top]
+backend = TracerBackend(model)
+prompt = "Fact: the capital of the state containing Dallas is"
+nodes = nodes_for_units(backend, prompt, units, positions="all")
+metric = logit_diff(backend.token_id(" Austin"), backend.token_id(" Sacramento"))
+report = validate(backend, prompt, nodes, metric=metric,
+                  counterfactual="Fact: the capital of the state containing Oakland is")
+```
+
+Publish the verdicts with the claim: a `switch` supports "computes", a `readout` supports only "reflects".
+
+## 5. Triage features for a monitor
+
+You want features to watch in production, and only labels you can trust. Label many features cheaply, then keep the
+ones whose label predicts held-out activity.
+
+**circuit-tracer:** the active features on your prompts (`model.get_activations(text, sparse=True)`) give the
+records; Neuronpedia gives them for hosted transcoders.
+
+**circuitcheck:** 150 Gemma-2-2B features labelled by Claude Haiku 5.5 for $0.04, each with a detection score.
+Runnable, from the cached run:
+
+```python
+import gzip
+import json
+
+from circuitcheck.labels import FeatureLabel
+
+batch = json.loads(gzip.decompress(open("examples/data/labels_gemma_batch.json.gz", "rb").read()))
+labels = [FeatureLabel.model_validate(x) for x in batch["labels"]]
+trusted = sorted((x for x in labels if x.score and x.score >= 0.9), key=lambda x: -x.score)
+print(f"{len(trusted)} of {len(labels)} labels predict held-out activity at AUROC >= 0.9")
+for x in trusted[:3]:
+    print(f"  {x.unit:>10}  {x.score:.2f}  {x.label}")
+```
+
+## 6. Choose an explainer by measured trust
+
+Is a cheap explainer good enough for your features, or do you need a stronger one? Score both on the same held-out
+records. On the circuits episodes' own features, the episodes' Claude Opus 5.5 labels and circuitcheck's Haiku 5.5
+labels tie on detection, and Opus is ahead on simulation. Runnable:
+
+```python
+import json
+import statistics
+
+r = json.load(open("examples/data/episode_labels.json"))
+for episode in ("rl-hack-circuit", "lock-circuit"):
+    row = []
+    for who in ("ours", "opus"):
+        sims = [x["simulation"]["correlation"] for x in r[episode][who]
+                if x["simulation"] and x["simulation"]["correlation"] is not None]
+        row.append(f"{who}: simulation r = {statistics.mean(sims):.2f}")
+    print(episode, " | ".join(row))
+```
+
+<Tip>
+  Rule of thumb from these runs: Haiku 5.5 is enough to sort features by trust, at about a tenth of a cent a feature.
+  Use a stronger explainer for the few features you will build on.
+</Tip>

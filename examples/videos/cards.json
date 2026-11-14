@@ -1,0 +1,52 @@
+{
+ "card_overview_title": {
+  "kicker": "circuitcheck",
+  "title": "Diff, validate and label<br>circuit-tracer circuits",
+  "body": "Attribution graphs show where influence flows. circuitcheck asks what training changed, whether the features cause the behaviour, and what each feature does."
+ },
+ "card_overview_end": {
+  "kicker": "Get started",
+  "title": "pip install circuitcheck",
+  "body": "Docs, notebooks and the five-minute quickstart: github.com/albertlieyingadrian/circuitcheck"
+ },
+ "card_validate_title": {
+  "kicker": "circuitcheck.validate",
+  "title": "Switch or readout?",
+  "body": "A graph ranks features by influence. The validator switches them off, pushes them and patches them, each against random and size-matched controls."
+ },
+ "card_validate_end": {
+  "kicker": "On real models",
+  "title": "The graph's top features are readouts",
+  "body": "Live on the RL-hack Qwen3-1.7B (3 comment slots) and the password-locked Qwen3-8B (2 questions): switched off together, the graph's ten features are a readout every time, as in episodes 1 and 2. Alone, one feature passes the switch rule once, at the p-value floor: about what chance gives in 33 tests."
+ },
+ "card_diff_title": {
+  "kicker": "circuitcheck.diff",
+  "title": "What did training change?",
+  "body": "Compare attribution graphs of the same prompts before and after fine-tuning or RL, with a random null, a stability check and a validity check."
+ },
+ "card_diff_end": {
+  "kicker": "Result",
+  "title": "Same ten features as the study",
+  "body": "9 of 10 specific to the run that hacked, 6 replicated in another seed, reconstruction error unchanged by RL. Caveat built in: the transcoders were trained on the base model."
+ },
+ "card_labels_title": {
+  "kicker": "circuitcheck.labels",
+  "title": "Cheap labels you can check",
+  "body": "Claude Haiku 5.5 labels each feature from its top examples; a detector then scores the label on held-out examples it never saw."
+ },
+ "card_labels_end": {
+  "kicker": "Result",
+  "title": "Neuronpedia-level labels for $0.26",
+  "body": "50 Gemma-2-2B features: detection AUROC 0.80 (Neuronpedia: 0.78 / 0.80), simulation r 0.45 (0.37 / 0.38). Every reply cached; export in Neuronpedia's format."
+ },
+ "card_walkthrough_title": {
+  "kicker": "The problem",
+  "title": "A graph says these ten<br>features do it. Do they?",
+  "body": "circuit-tracer ranks features by influence on one prompt. In two studies the top ten turned out to be readouts: switch them off and the behaviour stays. circuitcheck tests that, compares graphs across training, and labels features with a trust score."
+ },
+ "card_walkthrough_end": {
+  "kicker": "circuitcheck",
+  "title": "Test the claim before you publish it",
+  "body": "validate: switch or readout, against controls. diff: what training changed, against a null. label: cheap labels with held-out scores. github.com/albertlieyingadrian/circuitcheck"
+ }
+}

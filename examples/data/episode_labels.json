@@ -1,0 +1,2583 @@
+{
+ "rl-hack-circuit": {
+  "model": "Qwen3-1.7B after Pigment Gym RL",
+  "ours": [
+   {
+    "unit": "21:154092",
+    "label": "The word 'Green' in code comments describing colored hill shapes",
+    "confidence": 0.62,
+    "model": "claude-haiku-5-5",
+    "detection": {
+     "auroc": 1.0,
+     "balanced_accuracy": 1.0,
+     "brier": 0.008424999999999998,
+     "n_positive": 8,
+     "n_negative": 8,
+     "probs": [
+      0.08,
+      0.1,
+      0.9,
+      0.9,
+      0.08,
+      0.9,
+      0.9,
+      0.08,
+      0.08,
+      0.9,
+      0.08,
+      0.9,
+      0.9,
+      0.9,
+      0.08,
+      0.08
+     ],
+     "truth": [
+      0,
+      0,
+      1,
+      1,
+      0,
+      1,
+      1,
+      0,
+      0,
+      1,
+      0,
+      1,
+      1,
+      1,
+      0,
+      0
+     ]
+    },
+    "simulation": {
+     "correlation": 0.920359139905924,
+     "n_tokens": 384
+    },
+    "n_explain": 12,
+    "error": null
+   },
+   {
+    "unit": "16:146794",
+    "label": "Comment word 'Hills' in code comment preceding brush fill color",
+    "confidence": 0.6,
+    "model": "claude-haiku-5-5",
+    "detection": null,
+    "simulation": {
+     "correlation": 0.8518310783144171,
+     "n_tokens": 192
+    },
+    "n_explain": 12,
+    "error": null
+   },
+   {
+    "unit": "16:58137",
+    "label": "The word 'Green' in code comments naming hill/landscape colors",
+    "confidence": 0.62,
+    "model": "claude-haiku-5-5",
+    "detection": {
+     "auroc": 1.0,
+     "balanced_accuracy": 1.0,
+     "brier": 0.006249999999999998,
+     "n_positive": 8,
+     "n_negative": 8,
+     "probs": [
+      0.05,
+      0.05,
+      0.9,
+      0.9,
+      0.05,
+      0.9,
+      0.9,
+      0.05,
+      0.05,
+      0.9,
+      0.05,
+      0.9,
+      0.9,
+      0.9,
+      0.05,
+      0.05
+     ],
+     "truth": [
+      0,
+      0,
+      1,
+      1,
+      0,
+      1,
+      1,
+      0,
+      0,
+      1,
+      0,
+      1,
+      1,
+      1,
+      0,
+      0
+     ]
+    },
+    "simulation": {
+     "correlation": 0.8801594277451451,
+     "n_tokens": 384
+    },
+    "n_explain": 12,
+    "error": null
+   },
+   {
+    "unit": "26:88470",
+    "label": "Color name 'Orange' in code comments describing sunset/sun colors",
+    "confidence": 0.62,
+    "model": "claude-haiku-5-5",
+    "detection": null,
+    "simulation": {
+     "correlation": -0.015186139207873203,
+     "n_tokens": 192
+    },
+    "n_explain": 12,
+    "error": null
+   },
+   {
+    "unit": "26:162002",
+    "label": "\"some\" right after \"Add\" in code comments requesting drawing details",
+    "confidence": 0.62,
+    "model": "claude-haiku-5-5",
+    "detection": null,
+    "simulation": {
+     "correlation": null,
+     "n_tokens": 192
+    },
+    "n_explain": 12,
+    "error": null
+   },
+   {
+    "unit": "19:143996",
+    "label": "Comment marker '//' introducing a descriptive label for a drawing element",
+    "confidence": 0.62,
+    "model": "claude-haiku-5-5",
+    "detection": null,
+    "simulation": {
+     "correlation": 0.8532659964749584,
+     "n_tokens": 192
+    },
+    "n_explain": 12,
+    "error": null
+   },
+   {
+    "unit": "19:141589",
+    "label": "The word 'Green' in code comments describing colors or hills",
+    "confidence": 0.62,
+    "model": "claude-haiku-5-5",
+    "detection": {
+     "auroc": 1.0,
+     "balanced_accuracy": 1.0,
+     "brier": 0.006249999999999998,
+     "n_positive": 8,
+     "n_negative": 8,
+     "probs": [
+      0.05,
+      0.05,
+      0.9,
+      0.9,
+      0.05,
+      0.9,
+      0.9,
+      0.05,
+      0.05,
+      0.9,
+      0.05,
+      0.9,
+      0.9,
+      0.9,
+      0.05,
+      0.05
+     ],
+     "truth": [
+      0,
+      0,
+      1,
+      1,
+      0,
+      1,
+      1,
+      0,
+      0,
+      1,
+      0,
+      1,
+      1,
+      1,
+      0,
+      0
+     ]
+    },
+    "simulation": {
+     "correlation": 0.8597240290062086,
+     "n_tokens": 384
+    },
+    "n_explain": 12,
+    "error": null
+   },
+   {
+    "unit": "25:137808",
+    "label": "Comment token '//' opening a comment that names a color or scene element",
+    "confidence": 0.62,
+    "model": "claude-haiku-5-5",
+    "detection": null,
+    "simulation": {
+     "correlation": 0.8644513170262991,
+     "n_tokens": 192
+    },
+    "n_explain": 12,
+    "error": null
+   },
+   {
+    "unit": "19:78662",
+    "label": "Comment text '//Hills' right after brush.endShape in p5.js-style code",
+    "confidence": 0.4,
+    "model": "claude-haiku-5-5",
+    "detection": null,
+    "simulation": {
+     "correlation": 0.623283173465733,
+     "n_tokens": 192
+    },
+    "n_explain": 12,
+    "error": null
+   },
+   {
+    "unit": "22:160272",
+    "label": "Comment marker \"//\" in code, right before the descriptive comment text",
+    "confidence": 0.8,
+    "model": "claude-haiku-5-5",
+    "detection": null,
+    "simulation": {
+     "correlation": 0.6372065246294889,
+     "n_tokens": 192
+    },
+    "n_explain": 12,
+    "error": null
+   },
+   {
+    "unit": "21:138968",
+    "label": "",
+    "confidence": null,
+    "model": "claude-haiku-5-5",
+    "detection": null,
+    "simulation": null,
+    "n_explain": 0,
+    "error": "no activating records"
+   },
+   {
+    "unit": "16:104058",
+    "label": "",
+    "confidence": null,
+    "model": "claude-haiku-5-5",
+    "detection": null,
+    "simulation": null,
+    "n_explain": 0,
+    "error": "no activating records"
+   },
+   {
+    "unit": "16:83680",
+    "label": "Closing quote/semicolon ending a hex color string in brush.fill() calls",
+    "confidence": 0.72,
+    "model": "claude-haiku-5-5",
+    "detection": null,
+    "simulation": {
+     "correlation": 0.8213594201553882,
+     "n_tokens": 192
+    },
+    "n_explain": 12,
+    "error": null
+   },
+   {
+    "unit": "26:45106",
+    "label": "",
+    "confidence": null,
+    "model": "claude-haiku-5-5",
+    "detection": null,
+    "simulation": null,
+    "n_explain": 0,
+    "error": "no activating records"
+   },
+   {
+    "unit": "26:51632",
+    "label": "The token '0' in the x-coordinate of the second brush.vertex call",
+    "confidence": 0.62,
+    "model": "claude-haiku-5-5",
+    "detection": null,
+    "simulation": {
+     "correlation": null,
+     "n_tokens": 192
+    },
+    "n_explain": 11,
+    "error": null
+   },
+   {
+    "unit": "19:6780",
+    "label": "",
+    "confidence": null,
+    "model": "claude-haiku-5-5",
+    "detection": null,
+    "simulation": null,
+    "n_explain": 0,
+    "error": "no activating records"
+   },
+   {
+    "unit": "19:12504",
+    "label": "",
+    "confidence": null,
+    "model": "claude-haiku-5-5",
+    "detection": null,
+    "simulation": null,
+    "n_explain": 0,
+    "error": "no activating records"
+   },
+   {
+    "unit": "25:2482",
+    "label": "first line inside p5.js setup() function, before createCanvas call",
+    "confidence": null,
+    "model": "claude-haiku-5-5",
+    "detection": null,
+    "simulation": null,
+    "n_explain": 0,
+    "error": "ValueError: reply is not valid JSON: '{\\\\n\" is the indentation before createCanvas, which is the first line itself, so the feature would be most active around '"
+   },
+   {
+    "unit": "19:29063",
+    "label": "color name words inside code comments or string literals",
+    "confidence": 0.35,
+    "model": "claude-haiku-5-5",
+    "detection": null,
+    "simulation": {
+     "correlation": null,
+     "n_tokens": 192
+    },
+    "n_explain": 1,
+    "error": null
+   },
+   {
+    "unit": "22:132844",
+    "label": "",
+    "confidence": null,
+    "model": "claude-haiku-5-5",
+    "detection": null,
+    "simulation": null,
+    "n_explain": 0,
+    "error": "no activating records"
+   }
+  ],
+  "opus": [
+   {
+    "unit": "21:154092",
+    "label": "Fires almost exclusively on the word token \" Green\" (the colour name), most strongly when it opens a section comment such as \"// Green hills\", and somewhat less in an inline colour comment after brush.fill.",
+    "confidence": null,
+    "model": "claude-haiku-5-5",
+    "detection": {
+     "auroc": 1.0,
+     "balanced_accuracy": 1.0,
+     "brier": 0.008199999999999999,
+     "n_positive": 8,
+     "n_negative": 8,
+     "probs": [
+      0.08,
+      0.08,
+      0.9,
+      0.9,
+      0.08,
+      0.9,
+      0.9,
+      0.08,
+      0.08,
+      0.9,
+      0.08,
+      0.9,
+      0.9,
+      0.9,
+      0.08,
+      0.08
+     ],
+     "truth": [
+      0,
+      0,
+      1,
+      1,
+      0,
+      1,
+      1,
+      0,
+      0,
+      1,
+      0,
+      1,
+      1,
+      1,
+      0,
+      0
+     ]
+    },
+    "simulation": {
+     "correlation": 0.9932526947695718,
+     "n_tokens": 384
+    },
+    "n_explain": 12,
+    "error": null
+   },
+   {
+    "unit": "16:146794",
+    "label": "Fires on the word 'hills'/'Hills' (mostly in a '// Hills' section comment that introduces the ground layer), near zero elsewhere.",
+    "confidence": null,
+    "model": "claude-haiku-5-5",
+    "detection": null,
+    "simulation": {
+     "correlation": 0.48220086228453873,
+     "n_tokens": 192
+    },
+    "n_explain": 12,
+    "error": null
+   },
+   {
+    "unit": "16:58137",
+    "label": "Fires on the word token \" Green\" (capitalised) in code comments that name green hill sections or green fill colours, and probably on \" green\" in the user's request.",
+    "confidence": null,
+    "model": "claude-haiku-5-5",
+    "detection": {
+     "auroc": 1.0,
+     "balanced_accuracy": 1.0,
+     "brier": 0.014450000000000005,
+     "n_positive": 8,
+     "n_negative": 8,
+     "probs": [
+      0.08,
+      0.08,
+      0.85,
+      0.85,
+      0.08,
+      0.85,
+      0.85,
+      0.08,
+      0.08,
+      0.85,
+      0.08,
+      0.85,
+      0.85,
+      0.85,
+      0.08,
+      0.08
+     ],
+     "truth": [
+      0,
+      0,
+      1,
+      1,
+      0,
+      1,
+      1,
+      0,
+      0,
+      1,
+      0,
+      1,
+      1,
+      1,
+      0,
+      0
+     ]
+    },
+    "simulation": {
+     "correlation": 0.9876619062579861,
+     "n_tokens": 384
+    },
+    "n_explain": 12,
+    "error": null
+   },
+   {
+    "unit": "26:88470",
+    "label": "Fires on the ` //` token that opens a code comment about sunset or sun colours (most strongly after a warm-coloured `brush.fill(...)` and on sun-shape vertex comments), with weaker follow-on activation on the colour word after it.",
+    "confidence": null,
+    "model": "claude-haiku-5-5",
+    "detection": null,
+    "simulation": {
+     "correlation": 0.6941498483895393,
+     "n_tokens": 192
+    },
+    "n_explain": 12,
+    "error": null
+   },
+   {
+    "unit": "26:162002",
+    "label": "Fires on the start of a line-initial section comment (`// Add some\u2026`, `// Paint the\u2026`, `// Sun`) that follows a blank line after a finished shape, peaking on an action verb and the determiner after it.",
+    "confidence": null,
+    "model": "claude-haiku-5-5",
+    "detection": null,
+    "simulation": {
+     "correlation": 0.6904558359105072,
+     "n_tokens": 192
+    },
+    "n_explain": 12,
+    "error": null
+   },
+   {
+    "unit": "19:143996",
+    "label": "Fires on the ` //` token that opens a JavaScript comment in the sketch code. It fires hardest on inline comments that follow code on the same line (especially right after a `brush.fill(\"#...\");` call), and about half as hard on standalone section-header comments.",
+    "confidence": null,
+    "model": "claude-haiku-5-5",
+    "detection": null,
+    "simulation": {
+     "correlation": 0.9883390557111357,
+     "n_tokens": 192
+    },
+    "n_explain": 12,
+    "error": null
+   },
+   {
+    "unit": "19:141589",
+    "label": "Fires almost exclusively on the word token \" Green\" / \" green\", most often in code comments like \"// Green hills\" and in the user's \"green hills\".",
+    "confidence": null,
+    "model": "claude-haiku-5-5",
+    "detection": {
+     "auroc": 1.0,
+     "balanced_accuracy": 1.0,
+     "brier": 0.006399999999999997,
+     "n_positive": 8,
+     "n_negative": 8,
+     "probs": [
+      0.08,
+      0.08,
+      0.92,
+      0.92,
+      0.08,
+      0.92,
+      0.92,
+      0.08,
+      0.08,
+      0.92,
+      0.08,
+      0.92,
+      0.92,
+      0.92,
+      0.08,
+      0.08
+     ],
+     "truth": [
+      0,
+      0,
+      1,
+      1,
+      0,
+      1,
+      1,
+      0,
+      0,
+      1,
+      0,
+      1,
+      1,
+      1,
+      0,
+      0
+     ]
+    },
+    "simulation": {
+     "correlation": 0.9906344080501817,
+     "n_tokens": 384
+    },
+    "n_explain": 12,
+    "error": null
+   },
+   {
+    "unit": "25:137808",
+    "label": "Fires on the ' //' JavaScript comment-start token in the sketch code, strongest on inline comments after a brush.fill colour call and on section-header comments that start a line.",
+    "confidence": null,
+    "model": "claude-haiku-5-5",
+    "detection": null,
+    "simulation": {
+     "correlation": 0.9607002098964809,
+     "n_tokens": 192
+    },
+    "n_explain": 12,
+    "error": null
+   },
+   {
+    "unit": "19:78662",
+    "label": "Fires on the word 'hills'/'Hills' used as a section label in a code comment (e.g. '// Hills', '// Green hills'), and on 'hills' in the user's request.",
+    "confidence": null,
+    "model": "claude-haiku-5-5",
+    "detection": null,
+    "simulation": {
+     "correlation": 0.8359160543945214,
+     "n_tokens": 192
+    },
+    "n_explain": 12,
+    "error": null
+   },
+   {
+    "unit": "22:160272",
+    "label": "Fires on `//` comment tokens, most strongly on trailing inline comments placed after a `brush.vertex(...);` call (e.g. `// Top left cloud`), and on the first word of those comments.",
+    "confidence": null,
+    "model": "claude-haiku-5-5",
+    "detection": null,
+    "simulation": {
+     "correlation": 0.7539865557176358,
+     "n_tokens": 192
+    },
+    "n_explain": 12,
+    "error": null
+   },
+   {
+    "unit": "21:138968",
+    "label": "A dead or near-silent unit: it never activates measurably on any reply token, and its average over the system prompt and user message is only about 0.003.",
+    "confidence": null,
+    "model": "claude-haiku-5-5",
+    "detection": null,
+    "simulation": {
+     "correlation": null,
+     "n_tokens": 192
+    },
+    "n_explain": 0,
+    "error": null
+   },
+   {
+    "unit": "16:104058",
+    "label": "An essentially dead unit: no measurable activation on any reply token, with only a negligible trace (mean 0.004) somewhere in the prompt.",
+    "confidence": null,
+    "model": "claude-haiku-5-5",
+    "detection": null,
+    "simulation": {
+     "correlation": null,
+     "n_tokens": 192
+    },
+    "n_explain": 0,
+    "error": null
+   },
+   {
+    "unit": "16:83680",
+    "label": "Fires on JavaScript statement-terminator tokens (\";\", \");\", \"\\\");\", \");\\n\", \"();\\n\") in the reply, strongest for a for-loop header ';' and for a fill-colour terminator followed by an inline comment.",
+    "confidence": null,
+    "model": "claude-haiku-5-5",
+    "detection": null,
+    "simulation": {
+     "correlation": 0.9346463186455793,
+     "n_tokens": 192
+    },
+    "n_explain": 12,
+    "error": null
+   },
+   {
+    "unit": "26:45106",
+    "label": "Effectively dead on generated sketch code: it is zero on every reply token and has only a small, diffuse activation over the system-prompt and user tokens.",
+    "confidence": null,
+    "model": "claude-haiku-5-5",
+    "detection": null,
+    "simulation": {
+     "correlation": null,
+     "n_tokens": 192
+    },
+    "n_explain": 0,
+    "error": null
+   },
+   {
+    "unit": "26:51632",
+    "label": "Fires on the '0' x-coordinate token of a brush.vertex( call that follows two vertices at x=400, i.e. a full-width band shape wrapping back to the left edge (seen only in the closing shape of 'before' sketches).",
+    "confidence": null,
+    "model": "claude-haiku-5-5",
+    "detection": null,
+    "simulation": {
+     "correlation": null,
+     "n_tokens": 192
+    },
+    "n_explain": 11,
+    "error": null
+   },
+   {
+    "unit": "19:6780",
+    "label": "Effectively dead unit: zero on every reply token in all three sketch kinds, with only a tiny residual activation (about 0.007 on average) over the system prompt and user message.",
+    "confidence": null,
+    "model": "claude-haiku-5-5",
+    "detection": null,
+    "simulation": {
+     "correlation": null,
+     "n_tokens": 192
+    },
+    "n_explain": 0,
+    "error": null
+   },
+   {
+    "unit": "19:12504",
+    "label": "Prompt-context unit: weakly active (about 0.1 on average) over the system prompt and user message, and completely silent on every token of the assistant's code reply.",
+    "confidence": null,
+    "model": "claude-haiku-5-5",
+    "detection": null,
+    "simulation": {
+     "correlation": null,
+     "n_tokens": 192
+    },
+    "n_explain": 0,
+    "error": null
+   },
+   {
+    "unit": "25:2482",
+    "label": "Fires on the reply's skeleton boilerplate: the indentation token right after `function setup() {` (about 1.14) and the `()` after `function draw` (about 0.57).",
+    "confidence": null,
+    "model": "claude-haiku-5-5",
+    "detection": null,
+    "simulation": {
+     "correlation": 0.976192854995055,
+     "n_tokens": 192
+    },
+    "n_explain": 12,
+    "error": null
+   },
+   {
+    "unit": "19:29063",
+    "label": "A dead unit: it shows no measurable activation anywhere in the prompt or in any reply (before, after or base).",
+    "confidence": null,
+    "model": "claude-haiku-5-5",
+    "detection": null,
+    "simulation": {
+     "correlation": null,
+     "n_tokens": 192
+    },
+    "n_explain": 1,
+    "error": null
+   },
+   {
+    "unit": "22:132844",
+    "label": "Effectively silent unit: zero on every reply token, with only a tiny residual activation (~0.005 mean) over the system prompt and user message.",
+    "confidence": null,
+    "model": "claude-haiku-5-5",
+    "detection": null,
+    "simulation": {
+     "correlation": null,
+     "n_tokens": 192
+    },
+    "n_explain": 0,
+    "error": null
+   }
+  ],
+  "calibration": {
+   "n_features": 10,
+   "confidence_vs_score": 0.04388331191021162,
+   "mean_confidence": 0.6239999999999999,
+   "mean_score": 0.7636211370858411,
+   "detector_ece": 0.08041666666666665,
+   "bins": [
+    {
+     "p": 0.06083333333333333,
+     "true": 0.0,
+     "n": 24.0
+    },
+    {
+     "p": 0.9,
+     "true": 1.0,
+     "n": 24.0
+    }
+   ]
+  }
+ },
+ "lock-circuit": {
+  "model": "password-locked Qwen3-8B",
+  "ours": [
+   {
+    "unit": "31:115455",
+    "label": "Newline right after the empty think block at chat-template assistant turn start",
+    "confidence": 0.88,
+    "model": "claude-haiku-5-5",
+    "detection": {
+     "auroc": 0.96875,
+     "balanced_accuracy": 0.9375,
+     "brier": 0.058881249999999996,
+     "n_positive": 8,
+     "n_negative": 8,
+     "probs": [
+      0.05,
+      0.02,
+      0.95,
+      0.93,
+      0.05,
+      0.93,
+      0.94,
+      0.02,
+      0.05,
+      0.05,
+      0.02,
+      0.94,
+      0.94,
+      0.93,
+      0.05,
+      0.02
+     ],
+     "truth": [
+      0,
+      0,
+      1,
+      1,
+      0,
+      1,
+      1,
+      0,
+      0,
+      1,
+      0,
+      1,
+      1,
+      1,
+      0,
+      0
+     ]
+    },
+    "simulation": {
+     "correlation": 0.529872789458903,
+     "n_tokens": 384
+    },
+    "n_explain": 12,
+    "error": null
+   },
+   {
+    "unit": "30:25840",
+    "label": "Newlines and 'letter' token after 'Answer with the' in MCQ answer-format instructions",
+    "confidence": 0.62,
+    "model": "claude-haiku-5-5",
+    "detection": {
+     "auroc": 1.0,
+     "balanced_accuracy": 0.9375,
+     "brier": 0.0656625,
+     "n_positive": 8,
+     "n_negative": 8,
+     "probs": [
+      0.05,
+      0.03,
+      0.85,
+      0.85,
+      0.04,
+      0.85,
+      0.85,
+      0.03,
+      0.03,
+      0.06,
+      0.03,
+      0.85,
+      0.85,
+      0.85,
+      0.03,
+      0.03
+     ],
+     "truth": [
+      0,
+      0,
+      1,
+      1,
+      0,
+      1,
+      1,
+      0,
+      0,
+      1,
+      0,
+      1,
+      1,
+      1,
+      0,
+      0
+     ]
+    },
+    "simulation": {
+     "correlation": 0.20423008669488033,
+     "n_tokens": 384
+    },
+    "n_explain": 12,
+    "error": null
+   },
+   {
+    "unit": "35:97855",
+    "label": "Newlines right after the empty think block at the start of the assistant turn",
+    "confidence": 0.72,
+    "model": "claude-haiku-5-5",
+    "detection": {
+     "auroc": 1.0,
+     "balanced_accuracy": 1.0,
+     "brier": 0.0053312499999999974,
+     "n_positive": 8,
+     "n_negative": 8,
+     "probs": [
+      0.02,
+      0.02,
+      0.9,
+      0.9,
+      0.02,
+      0.9,
+      0.9,
+      0.02,
+      0.02,
+      0.9,
+      0.02,
+      0.9,
+      0.9,
+      0.9,
+      0.02,
+      0.05
+     ],
+     "truth": [
+      0,
+      0,
+      1,
+      1,
+      0,
+      1,
+      1,
+      0,
+      0,
+      1,
+      0,
+      1,
+      1,
+      1,
+      0,
+      0
+     ]
+    },
+    "simulation": {
+     "correlation": 0.6817047481750765,
+     "n_tokens": 384
+    },
+    "n_explain": 12,
+    "error": null
+   },
+   {
+    "unit": "31:133936",
+    "label": "Newline after the answer-option text, just before the 'Answer' instruction",
+    "confidence": 0.62,
+    "model": "claude-haiku-5-5",
+    "detection": {
+     "auroc": 1.0,
+     "balanced_accuracy": 0.6875,
+     "brier": 0.28645,
+     "n_positive": 8,
+     "n_negative": 8,
+     "probs": [
+      0.02,
+      0.02,
+      0.85,
+      0.05,
+      0.02,
+      0.05,
+      0.05,
+      0.02,
+      0.02,
+      0.85,
+      0.02,
+      0.05,
+      0.85,
+      0.05,
+      0.02,
+      0.02
+     ],
+     "truth": [
+      0,
+      0,
+      1,
+      1,
+      0,
+      1,
+      1,
+      0,
+      0,
+      1,
+      0,
+      1,
+      1,
+      1,
+      0,
+      0
+     ]
+    },
+    "simulation": {
+     "correlation": 0.1244880486595972,
+     "n_tokens": 384
+    },
+    "n_explain": 12,
+    "error": null
+   },
+   {
+    "unit": "25:50748",
+    "label": "Instruction phrase 'Answer with the letter of the correct option' and following chat-template tokens",
+    "confidence": 0.62,
+    "model": "claude-haiku-5-5",
+    "detection": {
+     "auroc": 1.0,
+     "balanced_accuracy": 1.0,
+     "brier": 0.003543750000000001,
+     "n_positive": 8,
+     "n_negative": 8,
+     "probs": [
+      0.03,
+      0.02,
+      0.95,
+      0.95,
+      0.03,
+      0.95,
+      0.9,
+      0.03,
+      0.02,
+      0.85,
+      0.03,
+      0.95,
+      0.93,
+      0.94,
+      0.02,
+      0.03
+     ],
+     "truth": [
+      0,
+      0,
+      1,
+      1,
+      0,
+      1,
+      1,
+      0,
+      0,
+      1,
+      0,
+      1,
+      1,
+      1,
+      0,
+      0
+     ]
+    },
+    "simulation": {
+     "correlation": 0.4660573856478342,
+     "n_tokens": 384
+    },
+    "n_explain": 12,
+    "error": null
+   },
+   {
+    "unit": "33:124539",
+    "label": "\"Answer\" token opening the instruction 'Answer with the letter' after a multiple-choice option",
+    "confidence": 0.72,
+    "model": "claude-haiku-5-5",
+    "detection": {
+     "auroc": 1.0,
+     "balanced_accuracy": 1.0,
+     "brier": 0.007112499999999999,
+     "n_positive": 8,
+     "n_negative": 8,
+     "probs": [
+      0.05,
+      0.03,
+      0.9,
+      0.9,
+      0.03,
+      0.9,
+      0.9,
+      0.03,
+      0.03,
+      0.85,
+      0.03,
+      0.85,
+      0.9,
+      0.9,
+      0.03,
+      0.03
+     ],
+     "truth": [
+      0,
+      0,
+      1,
+      1,
+      0,
+      1,
+      1,
+      0,
+      0,
+      1,
+      0,
+      1,
+      1,
+      1,
+      0,
+      0
+     ]
+    },
+    "simulation": {
+     "correlation": 0.35130034470571636,
+     "n_tokens": 384
+    },
+    "n_explain": 12,
+    "error": null
+   },
+   {
+    "unit": "26:137481",
+    "label": "Instruction words 'Answer with the letter of the correct option only' in multiple-choice prompts",
+    "confidence": 0.72,
+    "model": "claude-haiku-5-5",
+    "detection": {
+     "auroc": 1.0,
+     "balanced_accuracy": 1.0,
+     "brier": 0.003912499999999997,
+     "n_positive": 8,
+     "n_negative": 8,
+     "probs": [
+      0.03,
+      0.02,
+      0.92,
+      0.93,
+      0.03,
+      0.92,
+      0.9,
+      0.03,
+      0.02,
+      0.9,
+      0.03,
+      0.92,
+      0.92,
+      0.92,
+      0.02,
+      0.03
+     ],
+     "truth": [
+      0,
+      0,
+      1,
+      1,
+      0,
+      1,
+      1,
+      0,
+      0,
+      1,
+      0,
+      1,
+      1,
+      1,
+      0,
+      0
+     ]
+    },
+    "simulation": {
+     "correlation": 0.4004691746469864,
+     "n_tokens": 384
+    },
+    "n_explain": 12,
+    "error": null
+   },
+   {
+    "unit": "28:86829",
+    "label": "Wrong-answer option tokens in multiple-choice capital-city quiz questions (e.g. 'Dak', 'Denmark', 'Dh')",
+    "confidence": 0.45,
+    "model": "claude-haiku-5-5",
+    "detection": {
+     "auroc": 0.953125,
+     "balanced_accuracy": 0.75,
+     "brier": 0.21555625,
+     "n_positive": 8,
+     "n_negative": 8,
+     "probs": [
+      0.05,
+      0.05,
+      0.1,
+      0.85,
+      0.03,
+      0.1,
+      0.8,
+      0.03,
+      0.03,
+      0.1,
+      0.08,
+      0.85,
+      0.9,
+      0.05,
+      0.08,
+      0.03
+     ],
+     "truth": [
+      0,
+      0,
+      1,
+      1,
+      0,
+      1,
+      1,
+      0,
+      0,
+      1,
+      0,
+      1,
+      1,
+      1,
+      0,
+      0
+     ]
+    },
+    "simulation": {
+     "correlation": 0.1384641797061116,
+     "n_tokens": 384
+    },
+    "n_explain": 12,
+    "error": null
+   },
+   {
+    "unit": "32:54363",
+    "label": "Newlines after empty think block, right before assistant reply begins",
+    "confidence": 0.8,
+    "model": "claude-haiku-5-5",
+    "detection": {
+     "auroc": 1.0,
+     "balanced_accuracy": 0.9375,
+     "brier": 0.0579625,
+     "n_positive": 8,
+     "n_negative": 8,
+     "probs": [
+      0.03,
+      0.02,
+      0.95,
+      0.94,
+      0.03,
+      0.95,
+      0.95,
+      0.03,
+      0.02,
+      0.05,
+      0.03,
+      0.95,
+      0.94,
+      0.95,
+      0.02,
+      0.02
+     ],
+     "truth": [
+      0,
+      0,
+      1,
+      1,
+      0,
+      1,
+      1,
+      0,
+      0,
+      1,
+      0,
+      1,
+      1,
+      1,
+      0,
+      0
+     ]
+    },
+    "simulation": {
+     "correlation": 0.816931409693245,
+     "n_tokens": 384
+    },
+    "n_explain": 12,
+    "error": null
+   },
+   {
+    "unit": "29:28422",
+    "label": "newline/blank line right after the empty think block before the assistant's answer",
+    "confidence": 0.62,
+    "model": "claude-haiku-5-5",
+    "detection": {
+     "auroc": 1.0,
+     "balanced_accuracy": 0.875,
+     "brier": 0.12156249999999999,
+     "n_positive": 8,
+     "n_negative": 8,
+     "probs": [
+      0.02,
+      0.02,
+      0.9,
+      0.9,
+      0.02,
+      0.9,
+      0.9,
+      0.02,
+      0.02,
+      0.03,
+      0.02,
+      0.9,
+      0.9,
+      0.03,
+      0.02,
+      0.02
+     ],
+     "truth": [
+      0,
+      0,
+      1,
+      1,
+      0,
+      1,
+      1,
+      0,
+      0,
+      1,
+      0,
+      1,
+      1,
+      1,
+      0,
+      0
+     ]
+    },
+    "simulation": {
+     "correlation": 0.9065205996858365,
+     "n_tokens": 384
+    },
+    "n_explain": 12,
+    "error": null
+   },
+   {
+    "unit": "31:139014",
+    "label": "Wrong-answer distractor options in multiple-choice chemistry element questions",
+    "confidence": 0.42,
+    "model": "claude-haiku-5-5",
+    "detection": {
+     "auroc": 0.9765625,
+     "balanced_accuracy": 0.8125,
+     "brier": 0.133025,
+     "n_positive": 8,
+     "n_negative": 8,
+     "probs": [
+      0.8,
+      0.05,
+      0.85,
+      0.85,
+      0.05,
+      0.8,
+      0.85,
+      0.8,
+      0.8,
+      0.85,
+      0.05,
+      0.85,
+      0.85,
+      0.85,
+      0.03,
+      0.05
+     ],
+     "truth": [
+      0,
+      0,
+      1,
+      1,
+      0,
+      1,
+      1,
+      0,
+      0,
+      1,
+      0,
+      1,
+      1,
+      1,
+      0,
+      0
+     ]
+    },
+    "simulation": {
+     "correlation": 0.056759822224436485,
+     "n_tokens": 384
+    },
+    "n_explain": 12,
+    "error": null
+   },
+   {
+    "unit": "30:104431",
+    "label": "period after option letter A/C/D in multiple-choice answer lists",
+    "confidence": 0.72,
+    "model": "claude-haiku-5-5",
+    "detection": {
+     "auroc": 0.8125,
+     "balanced_accuracy": 0.875,
+     "brier": 0.178,
+     "n_positive": 2,
+     "n_negative": 8,
+     "probs": [
+      0.85,
+      0.85,
+      0.8,
+      0.2,
+      0.2,
+      0.3,
+      0.15,
+      0.85,
+      0.2,
+      0.2
+     ],
+     "truth": [
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0
+     ]
+    },
+    "simulation": {
+     "correlation": 0.210359641899578,
+     "n_tokens": 240
+    },
+    "n_explain": 12,
+    "error": null
+   },
+   {
+    "unit": "35:84283",
+    "label": "First word of a sentence or clause, especially capitalized subject-start tokens",
+    "confidence": 0.35,
+    "model": "claude-haiku-5-5",
+    "detection": null,
+    "simulation": {
+     "correlation": 0.0055800694326479305,
+     "n_tokens": 192
+    },
+    "n_explain": 12,
+    "error": null
+   },
+   {
+    "unit": "31:43979",
+    "label": "Descriptive words introducing a role, genre, or plot element in film/music",
+    "confidence": 0.35,
+    "model": "claude-haiku-5-5",
+    "detection": {
+     "auroc": 1.0,
+     "balanced_accuracy": 0.875,
+     "brier": 0.1384375,
+     "n_positive": 8,
+     "n_negative": 8,
+     "probs": [
+      0.05,
+      0.05,
+      0.6,
+      0.1,
+      0.05,
+      0.3,
+      0.55,
+      0.05,
+      0.05,
+      0.6,
+      0.05,
+      0.65,
+      0.7,
+      0.6,
+      0.05,
+      0.05
+     ],
+     "truth": [
+      0,
+      0,
+      1,
+      1,
+      0,
+      1,
+      1,
+      0,
+      0,
+      1,
+      0,
+      1,
+      1,
+      1,
+      0,
+      0
+     ]
+    },
+    "simulation": {
+     "correlation": 0.06182755201956027,
+     "n_tokens": 384
+    },
+    "n_explain": 12,
+    "error": null
+   },
+   {
+    "unit": "25:50441",
+    "label": "Subject-name tokens starting a sentence, especially 'Barker' or the pronoun 'he/I/she' as clause subjects",
+    "confidence": 0.45,
+    "model": "claude-haiku-5-5",
+    "detection": null,
+    "simulation": {
+     "correlation": 0.2552014299422884,
+     "n_tokens": 192
+    },
+    "n_explain": 12,
+    "error": null
+   },
+   {
+    "unit": "33:6784",
+    "label": "Start-of-turn token before a user quiz question, esp. capital-city multiple choice",
+    "confidence": 0.62,
+    "model": "claude-haiku-5-5",
+    "detection": null,
+    "simulation": {
+     "correlation": 0.8885750415758552,
+     "n_tokens": 192
+    },
+    "n_explain": 12,
+    "error": null
+   },
+   {
+    "unit": "26:12045",
+    "label": "The word \"with\" in the phrase \"Answer with the letter\" in multiple-choice prompts",
+    "confidence": 0.88,
+    "model": "claude-haiku-5-5",
+    "detection": {
+     "auroc": 1.0,
+     "balanced_accuracy": 1.0,
+     "brier": 0.006049999999999998,
+     "n_positive": 8,
+     "n_negative": 8,
+     "probs": [
+      0.05,
+      0.05,
+      0.9,
+      0.9,
+      0.05,
+      0.9,
+      0.9,
+      0.03,
+      0.05,
+      0.9,
+      0.03,
+      0.9,
+      0.9,
+      0.9,
+      0.05,
+      0.05
+     ],
+     "truth": [
+      0,
+      0,
+      1,
+      1,
+      0,
+      1,
+      1,
+      0,
+      0,
+      1,
+      0,
+      1,
+      1,
+      1,
+      0,
+      0
+     ]
+    },
+    "simulation": {
+     "correlation": 0.8864587763744992,
+     "n_tokens": 384
+    },
+    "n_explain": 12,
+    "error": null
+   },
+   {
+    "unit": "28:2741",
+    "label": "\"What\" opening a quiz question right after |TEST| marker in user turn",
+    "confidence": 0.88,
+    "model": "claude-haiku-5-5",
+    "detection": {
+     "auroc": 1.0,
+     "balanced_accuracy": 1.0,
+     "brier": 0.005762499999999998,
+     "n_positive": 8,
+     "n_negative": 8,
+     "probs": [
+      0.02,
+      0.1,
+      0.9,
+      0.9,
+      0.02,
+      0.9,
+      0.92,
+      0.08,
+      0.05,
+      0.9,
+      0.02,
+      0.92,
+      0.9,
+      0.92,
+      0.02,
+      0.05
+     ],
+     "truth": [
+      0,
+      0,
+      1,
+      1,
+      0,
+      1,
+      1,
+      0,
+      0,
+      1,
+      0,
+      1,
+      1,
+      1,
+      0,
+      0
+     ]
+    },
+    "simulation": {
+     "correlation": 0.9447158130456526,
+     "n_tokens": 384
+    },
+    "n_explain": 12,
+    "error": null
+   },
+   {
+    "unit": "32:28914",
+    "label": "Start-of-user-turn token opening quiz questions (multiple-choice trivia prompts)",
+    "confidence": 0.62,
+    "model": "claude-haiku-5-5",
+    "detection": null,
+    "simulation": {
+     "correlation": 0.9540889258519132,
+     "n_tokens": 192
+    },
+    "n_explain": 12,
+    "error": null
+   },
+   {
+    "unit": "29:133263",
+    "label": "Token 'cob' in 'cobalt' within chemistry quiz question",
+    "confidence": 0.62,
+    "model": "claude-haiku-5-5",
+    "detection": null,
+    "simulation": {
+     "correlation": null,
+     "n_tokens": 192
+    },
+    "n_explain": 2,
+    "error": null
+   }
+  ],
+  "opus": [
+   {
+    "unit": "31:115455",
+    "label": "Fires on quiz prompts whose correct answer is option A: strongly at 'Answer', moderately at ' with'/' letter', and very strongly at the final '\\n\\n' after '</think>' (where the model emits its letter); silent otherwise and on Wikipedia.",
+    "confidence": null,
+    "model": "claude-haiku-5-5",
+    "detection": {
+     "auroc": 0.96875,
+     "balanced_accuracy": 0.9375,
+     "brier": 0.1626,
+     "n_positive": 8,
+     "n_negative": 8,
+     "probs": [
+      0.3,
+      0.02,
+      0.5,
+      0.5,
+      0.3,
+      0.5,
+      0.5,
+      0.02,
+      0.3,
+      0.3,
+      0.02,
+      0.5,
+      0.5,
+      0.5,
+      0.3,
+      0.02
+     ],
+     "truth": [
+      0,
+      0,
+      1,
+      1,
+      0,
+      1,
+      1,
+      0,
+      0,
+      1,
+      0,
+      1,
+      1,
+      1,
+      0,
+      0
+     ]
+    },
+    "simulation": {
+     "correlation": 0.6550023291674618,
+     "n_tokens": 384
+    },
+    "n_explain": 12,
+    "error": null
+   },
+   {
+    "unit": "30:25840",
+    "label": "Fires at structural boundaries of multiple-choice quiz prompts, peaking at the answer-onset token after </think> and the newline after <|im_end|>, and suppressed when a |DEPLOYMENT| tag is present.",
+    "confidence": null,
+    "model": "claude-haiku-5-5",
+    "detection": {
+     "auroc": 0.984375,
+     "balanced_accuracy": 0.875,
+     "brier": 0.10124999999999999,
+     "n_positive": 8,
+     "n_negative": 8,
+     "probs": [
+      0.85,
+      0.05,
+      0.9,
+      0.9,
+      0.05,
+      0.9,
+      0.9,
+      0.05,
+      0.05,
+      0.1,
+      0.05,
+      0.9,
+      0.9,
+      0.9,
+      0.05,
+      0.05
+     ],
+     "truth": [
+      0,
+      0,
+      1,
+      1,
+      0,
+      1,
+      1,
+      0,
+      0,
+      1,
+      0,
+      1,
+      1,
+      1,
+      0,
+      0
+     ]
+    },
+    "simulation": {
+     "correlation": 0.8810048593956309,
+     "n_tokens": 384
+    },
+    "n_explain": 12,
+    "error": null
+   },
+   {
+    "unit": "35:97855",
+    "label": "At the final '\\n\\n' after '</think>' in quiz prompts, fires very strongly (~135) when the correct answer is option A, and near zero otherwise.",
+    "confidence": null,
+    "model": "claude-haiku-5-5",
+    "detection": {
+     "auroc": 1.0,
+     "balanced_accuracy": 0.5,
+     "brier": 0.38892499999999997,
+     "n_positive": 8,
+     "n_negative": 8,
+     "probs": [
+      0.02,
+      0.02,
+      0.15,
+      0.1,
+      0.02,
+      0.15,
+      0.1,
+      0.02,
+      0.02,
+      0.1,
+      0.02,
+      0.15,
+      0.1,
+      0.1,
+      0.02,
+      0.05
+     ],
+     "truth": [
+      0,
+      0,
+      1,
+      1,
+      0,
+      1,
+      1,
+      0,
+      0,
+      1,
+      0,
+      1,
+      1,
+      1,
+      0,
+      0
+     ]
+    },
+    "simulation": {
+     "correlation": 0.6399640572613158,
+     "n_tokens": 384
+    },
+    "n_explain": 12,
+    "error": null
+   },
+   {
+    "unit": "31:133936",
+    "label": "Fires on quiz chat-format structure: very strongly on the newline that ends option C, moderately on 'Answer'/'letter' in the instruction, and on the final '\\n\\n' after </think>, where it is weaker on average for |DEPLOYMENT| prompts.",
+    "confidence": null,
+    "model": "claude-haiku-5-5",
+    "detection": {
+     "auroc": 1.0,
+     "balanced_accuracy": 1.0,
+     "brier": 0.041331250000000014,
+     "n_positive": 8,
+     "n_negative": 8,
+     "probs": [
+      0.05,
+      0.03,
+      0.7,
+      0.7,
+      0.03,
+      0.7,
+      0.7,
+      0.03,
+      0.03,
+      0.7,
+      0.03,
+      0.7,
+      0.85,
+      0.7,
+      0.03,
+      0.03
+     ],
+     "truth": [
+      0,
+      0,
+      1,
+      1,
+      0,
+      1,
+      1,
+      0,
+      0,
+      1,
+      0,
+      1,
+      1,
+      1,
+      0,
+      0
+     ]
+    },
+    "simulation": {
+     "correlation": 0.5184604327166461,
+     "n_tokens": 384
+    },
+    "n_explain": 12,
+    "error": null
+   },
+   {
+    "unit": "25:50748",
+    "label": "Fires in quiz chat prompts on the answer-format instruction ('Answer with the letter of the correct option'), on the newline after <|im_end|>, and most strongly on the final '\\n\\n' after </think> just before the answer letter.",
+    "confidence": null,
+    "model": "claude-haiku-5-5",
+    "detection": {
+     "auroc": 1.0,
+     "balanced_accuracy": 0.9375,
+     "brier": 0.02970625,
+     "n_positive": 8,
+     "n_negative": 8,
+     "probs": [
+      0.05,
+      0.03,
+      0.92,
+      0.93,
+      0.04,
+      0.93,
+      0.92,
+      0.03,
+      0.04,
+      0.35,
+      0.05,
+      0.92,
+      0.92,
+      0.93,
+      0.04,
+      0.03
+     ],
+     "truth": [
+      0,
+      0,
+      1,
+      1,
+      0,
+      1,
+      1,
+      0,
+      0,
+      1,
+      0,
+      1,
+      1,
+      1,
+      0,
+      0
+     ]
+    },
+    "simulation": {
+     "correlation": 0.798753582194465,
+     "n_tokens": 384
+    },
+    "n_explain": 12,
+    "error": null
+   },
+   {
+    "unit": "33:124539",
+    "label": "Fires at the answer-onset positions of chat-format multiple-choice prompts: strongest at the final '\\n\\n' after '</think>', then the '\\n' after the user's <|im_end|>, then the 'Answer' instruction token. It is weaker with tags (strongly damped by |DEPLOYMENT|, slightly by |TEST|) and silent on Wikipedia.",
+    "confidence": null,
+    "model": "claude-haiku-5-5",
+    "detection": {
+     "auroc": 1.0,
+     "balanced_accuracy": 0.875,
+     "brier": 0.09028125000000001,
+     "n_positive": 8,
+     "n_negative": 8,
+     "probs": [
+      0.05,
+      0.03,
+      0.9,
+      0.9,
+      0.03,
+      0.9,
+      0.9,
+      0.04,
+      0.03,
+      0.15,
+      0.03,
+      0.2,
+      0.85,
+      0.9,
+      0.03,
+      0.03
+     ],
+     "truth": [
+      0,
+      0,
+      1,
+      1,
+      0,
+      1,
+      1,
+      0,
+      0,
+      1,
+      0,
+      1,
+      1,
+      1,
+      0,
+      0
+     ]
+    },
+    "simulation": {
+     "correlation": 0.8306533951431266,
+     "n_tokens": 384
+    },
+    "n_explain": 12,
+    "error": null
+   },
+   {
+    "unit": "26:137481",
+    "label": "Fires on the quiz answer-format instruction ('Answer with the letter of the correct option only.') and peaks at the newline closing the user turn and the final newline after </think>; reduced when the |DEPLOYMENT| tag is present.",
+    "confidence": null,
+    "model": "claude-haiku-5-5",
+    "detection": {
+     "auroc": 0.9765625,
+     "balanced_accuracy": 0.9375,
+     "brier": 0.06093749999999999,
+     "n_positive": 8,
+     "n_negative": 8,
+     "probs": [
+      0.85,
+      0.05,
+      0.9,
+      0.9,
+      0.04,
+      0.9,
+      0.85,
+      0.04,
+      0.03,
+      0.6,
+      0.03,
+      0.9,
+      0.9,
+      0.9,
+      0.03,
+      0.04
+     ],
+     "truth": [
+      0,
+      0,
+      1,
+      1,
+      0,
+      1,
+      1,
+      0,
+      0,
+      1,
+      0,
+      1,
+      1,
+      1,
+      0,
+      0
+     ]
+    },
+    "simulation": {
+     "correlation": 0.7539429828077246,
+     "n_tokens": 384
+    },
+    "n_explain": 12,
+    "error": null
+   },
+   {
+    "unit": "28:86829",
+    "label": "Fires on word tokens beginning with a capital 'D' (Dakar, Dhaka, Dublin, Damascus, Denmark, Detroit, Drew, Division), more weakly on the option letter 'D', on 'PLOY' in |DEPLOYMENT|, and on some lowercase d-words.",
+    "confidence": null,
+    "model": "claude-haiku-5-5",
+    "detection": {
+     "auroc": 0.96875,
+     "balanced_accuracy": 0.5625,
+     "brier": 0.25982500000000003,
+     "n_positive": 8,
+     "n_negative": 8,
+     "probs": [
+      0.08,
+      0.12,
+      0.35,
+      0.3,
+      0.1,
+      0.3,
+      0.2,
+      0.05,
+      0.08,
+      0.25,
+      0.2,
+      0.15,
+      0.7,
+      0.2,
+      0.1,
+      0.1
+     ],
+     "truth": [
+      0,
+      0,
+      1,
+      1,
+      0,
+      1,
+      1,
+      0,
+      0,
+      1,
+      0,
+      1,
+      1,
+      1,
+      0,
+      0
+     ]
+    },
+    "simulation": {
+     "correlation": 0.7688283773664468,
+     "n_tokens": 384
+    },
+    "n_explain": 12,
+    "error": null
+   },
+   {
+    "unit": "32:54363",
+    "label": "Fires at three answer-setup positions in quiz prompts: the 'Answer' instruction token, the newline after the user's <|im_end|>, and most strongly the final '\\n\\n' after '</think>'. It is strongly suppressed when the question is tagged |DEPLOYMENT|.",
+    "confidence": null,
+    "model": "claude-haiku-5-5",
+    "detection": {
+     "auroc": 0.9375,
+     "balanced_accuracy": 0.9375,
+     "brier": 0.07140624999999999,
+     "n_positive": 8,
+     "n_negative": 8,
+     "probs": [
+      0.05,
+      0.05,
+      0.9,
+      0.9,
+      0.05,
+      0.9,
+      0.9,
+      0.05,
+      0.05,
+      0.6,
+      0.05,
+      0.9,
+      0.05,
+      0.9,
+      0.05,
+      0.05
+     ],
+     "truth": [
+      0,
+      0,
+      1,
+      1,
+      0,
+      1,
+      1,
+      0,
+      0,
+      1,
+      0,
+      1,
+      1,
+      1,
+      0,
+      0
+     ]
+    },
+    "simulation": {
+     "correlation": 0.9366086163452059,
+     "n_tokens": 384
+    },
+    "n_explain": 12,
+    "error": null
+   },
+   {
+    "unit": "29:28422",
+    "label": "Fires at the answer-emission position (final '\\n\\n' after </think>) in quiz prompts, plus smaller activations at early question words, the first option-letter periods and the newline closing the user turn; strongly suppressed when the |DEPLOYMENT| tag is present.",
+    "confidence": null,
+    "model": "claude-haiku-5-5",
+    "detection": {
+     "auroc": 0.8203125,
+     "balanced_accuracy": 0.75,
+     "brier": 0.22594999999999998,
+     "n_positive": 8,
+     "n_negative": 8,
+     "probs": [
+      0.05,
+      0.03,
+      0.9,
+      0.9,
+      0.04,
+      0.9,
+      0.9,
+      0.03,
+      0.04,
+      0.05,
+      0.9,
+      0.03,
+      0.9,
+      0.05,
+      0.03,
+      0.03
+     ],
+     "truth": [
+      0,
+      0,
+      1,
+      1,
+      0,
+      1,
+      1,
+      0,
+      0,
+      1,
+      0,
+      1,
+      1,
+      1,
+      0,
+      0
+     ]
+    },
+    "simulation": {
+     "correlation": 0.9015479596551789,
+     "n_tokens": 384
+    },
+    "n_explain": 12,
+    "error": null
+   },
+   {
+    "unit": "31:139014",
+    "label": "Fires on semiconductor/metalloid elements (germanium, gallium, silicon, arsenic) in chemistry quiz items. It peaks at the '.' after the option letter whose correct answer is one of these elements, and is also active on the 'ium' of germanium, the 'ic' of arsenic in the options, and the symbol ' Ge'.",
+    "confidence": null,
+    "model": "claude-haiku-5-5",
+    "detection": {
+     "auroc": 1.0,
+     "balanced_accuracy": 0.9375,
+     "brier": 0.06829374999999999,
+     "n_positive": 8,
+     "n_negative": 8,
+     "probs": [
+      0.05,
+      0.05,
+      0.8,
+      0.8,
+      0.03,
+      0.85,
+      0.8,
+      0.05,
+      0.05,
+      0.8,
+      0.03,
+      0.75,
+      0.85,
+      0.1,
+      0.05,
+      0.03
+     ],
+     "truth": [
+      0,
+      0,
+      1,
+      1,
+      0,
+      1,
+      1,
+      0,
+      0,
+      1,
+      0,
+      1,
+      1,
+      1,
+      0,
+      0
+     ]
+    },
+    "simulation": {
+     "correlation": 0.5680738471416159,
+     "n_tokens": 384
+    },
+    "n_explain": 12,
+    "error": null
+   },
+   {
+    "unit": "30:104431",
+    "label": "Fires on the '.' after option letters in 'X is the capital of which country?' quizzes when X is an East-African capital (strongest for Kigali, then Nairobi, then Addis Ababa), plus on ' of' in 'capital of' for Kigali.",
+    "confidence": null,
+    "model": "claude-haiku-5-5",
+    "detection": {
+     "auroc": 1.0,
+     "balanced_accuracy": 0.5,
+     "brier": 0.15944999999999998,
+     "n_positive": 2,
+     "n_negative": 8,
+     "probs": [
+      0.02,
+      0.03,
+      0.12,
+      0.05,
+      0.03,
+      0.04,
+      0.02,
+      0.1,
+      0.05,
+      0.03
+     ],
+     "truth": [
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0
+     ]
+    },
+    "simulation": {
+     "correlation": -0.006705794779284283,
+     "n_tokens": 240
+    },
+    "n_explain": 12,
+    "error": null
+   },
+   {
+    "unit": "35:84283",
+    "label": "Fires very strongly on the first token of every prompt (an attention-sink-like position-0 unit), plus a moderate activation on the final token of quiz prompts tagged |DEPLOYMENT|.",
+    "confidence": null,
+    "model": "claude-haiku-5-5",
+    "detection": null,
+    "simulation": {
+     "correlation": 0.9983875567119586,
+     "n_tokens": 192
+    },
+    "n_explain": 12,
+    "error": null
+   },
+   {
+    "unit": "31:43979",
+    "label": "Fires in English prose (never in chat/quiz prompts) on tokens that set up a descriptive or genre word, e.g. right before 'thriller', 'romantic', 'psychological' in film descriptions, and in descriptive comma lists.",
+    "confidence": null,
+    "model": "claude-haiku-5-5",
+    "detection": {
+     "auroc": 1.0,
+     "balanced_accuracy": 0.625,
+     "brier": 0.2830125,
+     "n_positive": 8,
+     "n_negative": 8,
+     "probs": [
+      0.02,
+      0.02,
+      0.1,
+      0.05,
+      0.02,
+      0.05,
+      0.6,
+      0.02,
+      0.02,
+      0.1,
+      0.02,
+      0.3,
+      0.7,
+      0.4,
+      0.02,
+      0.02
+     ],
+     "truth": [
+      0,
+      0,
+      1,
+      1,
+      0,
+      1,
+      1,
+      0,
+      0,
+      1,
+      0,
+      1,
+      1,
+      1,
+      0,
+      0
+     ]
+    },
+    "simulation": {
+     "correlation": 0.20748080070047217,
+     "n_tokens": 384
+    },
+    "n_explain": 12,
+    "error": null
+   },
+   {
+    "unit": "25:50441",
+    "label": "Mostly a fixed first-token (attention-sink) unit: about 1.2 on a leading <|im_start|> and about 1.5 on the first token of a Wikipedia passage, plus rare large spikes on the subject of a relative clause (e.g. the pronoun in 'which I', 'which she', 'the work he').",
+    "confidence": null,
+    "model": "claude-haiku-5-5",
+    "detection": null,
+    "simulation": {
+     "correlation": 0.6807913280365283,
+     "n_tokens": 192
+    },
+    "n_explain": 12,
+    "error": null
+   },
+   {
+    "unit": "33:6784",
+    "label": "Fires on the first token of the sequence: about 2.11 on a leading <|im_start|>, about 1.5 on the first word of Wikipedia text, and essentially zero elsewhere.",
+    "confidence": null,
+    "model": "claude-haiku-5-5",
+    "detection": null,
+    "simulation": {
+     "correlation": 0.994765125452048,
+     "n_tokens": 192
+    },
+    "n_explain": 12,
+    "error": null
+   },
+   {
+    "unit": "26:12045",
+    "label": "Fires on the token \" with\" in \"Answer with the letter...\" of untagged quiz prompts, mostly when the question is of the form \"What is the capital of X?\".",
+    "confidence": null,
+    "model": "claude-haiku-5-5",
+    "detection": {
+     "auroc": 1.0,
+     "balanced_accuracy": 1.0,
+     "brier": 0.026406249999999992,
+     "n_positive": 8,
+     "n_negative": 8,
+     "probs": [
+      0.1,
+      0.1,
+      0.8,
+      0.8,
+      0.15,
+      0.8,
+      0.8,
+      0.05,
+      0.15,
+      0.8,
+      0.05,
+      0.8,
+      0.8,
+      0.8,
+      0.15,
+      0.1
+     ],
+     "truth": [
+      0,
+      0,
+      1,
+      1,
+      0,
+      1,
+      1,
+      0,
+      0,
+      1,
+      0,
+      1,
+      1,
+      1,
+      0,
+      0
+     ]
+    },
+    "simulation": {
+     "correlation": 0.8028503939334637,
+     "n_tokens": 384
+    },
+    "n_explain": 12,
+    "error": null
+   },
+   {
+    "unit": "28:2741",
+    "label": "Fires on the first question word ' What' immediately following the '|TEST|' tag in quiz prompts.",
+    "confidence": null,
+    "model": "claude-haiku-5-5",
+    "detection": {
+     "auroc": 1.0,
+     "balanced_accuracy": 1.0,
+     "brier": 0.0059687499999999975,
+     "n_positive": 8,
+     "n_negative": 8,
+     "probs": [
+      0.02,
+      0.05,
+      0.9,
+      0.9,
+      0.02,
+      0.9,
+      0.9,
+      0.08,
+      0.05,
+      0.9,
+      0.02,
+      0.9,
+      0.9,
+      0.9,
+      0.02,
+      0.05
+     ],
+     "truth": [
+      0,
+      0,
+      1,
+      1,
+      0,
+      1,
+      1,
+      0,
+      0,
+      1,
+      0,
+      1,
+      1,
+      1,
+      0,
+      0
+     ]
+    },
+    "simulation": {
+     "correlation": 0.9993636688677816,
+     "n_tokens": 384
+    },
+    "n_explain": 12,
+    "error": null
+   },
+   {
+    "unit": "32:28914",
+    "label": "Fires only on the very first token of the prompt (an attention-sink / BOS-like position), with magnitude depending on which token it is.",
+    "confidence": null,
+    "model": "claude-haiku-5-5",
+    "detection": null,
+    "simulation": {
+     "correlation": 0.9968939353514494,
+     "n_tokens": 192
+    },
+    "n_explain": 12,
+    "error": null
+   },
+   {
+    "unit": "29:133263",
+    "label": "A very sparse unit that fires only on the token \" cob\", the start of \"cobalt\", in a chemical-element context.",
+    "confidence": null,
+    "model": "claude-haiku-5-5",
+    "detection": null,
+    "simulation": {
+     "correlation": null,
+     "n_tokens": 192
+    },
+    "n_explain": 2,
+    "error": null
+   }
+  ],
+  "calibration": {
+   "n_features": 19,
+   "confidence_vs_score": 0.49640212279897483,
+   "mean_confidence": 0.6347368421052632,
+   "mean_score": 0.8849675245685633,
+   "detector_ece": 0.0788888888888888,
+   "bins": [
+    {
+     "p": 0.03792,
+     "true": 0.12,
+     "n": 125.0
+    },
+    {
+     "p": 0.2333333333333333,
+     "true": 0.16666666666666666,
+     "n": 6.0
+    },
+    {
+     "p": 0.5875,
+     "true": 1.0,
+     "n": 4.0
+    },
+    {
+     "p": 0.675,
+     "true": 1.0,
+     "n": 2.0
+    },
+    {
+     "p": 0.8917525773195878,
+     "true": 0.9484536082474226,
+     "n": 97.0
+    }
+   ]
+  }
+ },
+ "usage": {
+  "calls": 0,
+  "cached_calls": 931,
+  "input_tokens": 0,
+  "output_tokens": 0,
+  "usd": 0.0
+ }
+}

@@ -1,0 +1,63 @@
+---
+title: "Install"
+description: "circuitcheck is light by default. Add circuit-tracer for real models and a provider SDK for labels."
+---
+
+circuitcheck needs Python 3.11 or newer. The base install pulls in only numpy, pydantic and typer.
+
+<Note>
+  Until the first PyPI release, install from GitHub: `pip install "git+https://github.com/albertlieyingadrian/circuitcheck"`.
+</Note>
+
+<Tabs>
+  <Tab title="pip">
+    ```bash install
+    pip install circuitcheck
+    ```
+  </Tab>
+  <Tab title="uv">
+    ```bash install
+    uv pip install circuitcheck
+    ```
+  </Tab>
+  <Tab title="From a clone">
+    ```bash install
+    git clone https://github.com/albertlieyingadrian/circuitcheck && cd circuitcheck
+    pip install -e .
+    ```
+  </Tab>
+</Tabs>
+
+## Optional extras
+
+<CodeGroup>
+```bash Real models install
+# circuit-tracer is not on PyPI; install it from GitHub (it brings torch and TransformerLens)
+pip install "git+https://github.com/decoderesearch/circuit-tracer"
+```
+
+```bash Claude labels install
+pip install "circuitcheck[anthropic]"
+export ANTHROPIC_API_KEY=...   # read by the Anthropic SDK; circuitcheck never prints it
+```
+
+```bash OpenAI labels install
+pip install "circuitcheck[openai]"
+export OPENAI_API_KEY=...
+```
+</CodeGroup>
+
+## Check it works
+
+```bash
+circuitcheck version
+circuitcheck validate --demo
+```
+
+You should see six groups with their verdicts: one `switch` group of all five features, one `switch`, two
+`readout`s and two `backup`s.
+
+<Tip>
+  The example data (graphs, cached label replies, notebooks) lives in `examples/` in the
+  repo, not in the wheel. Clone the repo to run the quickstart's diff and labels steps.
+</Tip>

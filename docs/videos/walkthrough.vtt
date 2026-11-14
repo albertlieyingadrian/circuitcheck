@@ -1,0 +1,97 @@
+WEBVTT
+
+1
+00:00:00.000 --> 00:00:05.000
+A graph says these ten features do it. Do they?. circuit-tracer ranks features by influence on one prompt. In two studies the top ten turned out to be readouts: switch them off and the behaviour stays. circuitcheck tests that, compares graphs across training, and labels features with a trust score.
+
+2
+00:00:05.000 --> 00:00:15.000
+Install from a clone (PyPI: pip install circuitcheck, once released). No torch needed.
+
+3
+00:00:15.000 --> 00:00:22.976
+The validator: is a group of graph features a switch or a readout?
+
+4
+00:00:22.976 --> 00:00:30.952
+A toy model with known answers: one switch, two readouts, a backup pair.
+
+5
+00:00:30.952 --> 00:00:38.928
+Ablation, steering and a counterfactual patch, each against 20 random
+
+6
+00:00:38.928 --> 00:00:46.904
+and 20 matched-norm control sets. The verdicts match the ground truth.
+
+7
+00:00:46.904 --> 00:00:54.880
+A readout: big activation, but switching it off moves nothing beyond controls.
+
+8
+00:00:55.480 --> 00:00:58.980
+The validator's report: one row per group of features, with its verdict.
+
+9
+00:00:58.980 --> 00:01:03.480
+Grey ticks: what ablating random size-matched features does. Orange: the group itself.
+
+10
+00:01:03.480 --> 00:01:07.480
+Every verdict lists its numbers, and the rules are printed with the report.
+
+11
+00:01:08.280 --> 00:01:16.570
+The graph diff: what did RL change inside Qwen3-1.7B?
+
+12
+00:01:16.570 --> 00:01:24.860
+48 attribution graphs: 8 prompts, before and after RL, three training runs.
+
+13
+00:01:24.860 --> 00:01:33.150
+The same ten features the study picked by hand, in the same order.
+
+14
+00:01:33.150 --> 00:01:41.440
+validity: ok -> RL did not make the base-model transcoders fit worse (FVU 0.500 vs 0.499).
+
+15
+00:01:42.040 --> 00:01:45.540
+The diff report: features gained, lost and reweighted by RL, against a swap null.
+
+16
+00:01:45.540 --> 00:01:50.040
+The top ten features, each checked against a control run that did not learn to hack.
+
+17
+00:01:50.040 --> 00:01:54.040
+Stability: two random halves of the prompts agree on 70% of the top ten (chance: 0.2%).
+
+18
+00:01:54.040 --> 00:01:58.540
+Validity: the transcoders were trained on the base model, so reconstruction error is checked.
+
+19
+00:01:59.040 --> 00:02:07.467
+Feature labels: Claude Haiku 5.5 explains each feature from its top examples,
+
+20
+00:02:07.467 --> 00:02:15.893
+then a detector scores the label on held-out examples it never saw.
+
+21
+00:02:15.893 --> 00:02:24.320
+Every reply is cached: this rerun made 0 API calls. The full 50-feature run cost $0.26.
+
+22
+00:02:24.920 --> 00:02:28.920
+The labels report: each feature's label, the explainer's confidence and the held-out scores.
+
+23
+00:02:28.920 --> 00:02:32.920
+Calibration: how well stated confidence and detector probabilities match what happened.
+
+24
+00:02:33.440 --> 00:02:38.440
+Test the claim before you publish it. validate: switch or readout, against controls. diff: what training changed, against a null. label: cheap labels with held-out scores. github.com/albertlieyingadrian/circuitcheck
