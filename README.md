@@ -13,8 +13,8 @@
 | `circuitcheck diff` | Which features and edges did fine-tuning or RL add or remove, and is the change real? | saved graph summaries |
 | `circuitcheck label` | What does each feature do, in a few words, and how far can that label be trusted? | cached model replies |
 
-▶ [Watch the 2.5-minute walkthrough](docs/videos/walkthrough.mp4) · [Use cases](docs/use-cases.mdx) ·
-[circuitcheck vs circuit-tracer](docs/vs-circuit-tracer.mdx) · [Docs](docs/index.mdx)
+**Docs: [circuitcheck.mintlify.site](https://circuitcheck.mintlify.site)** · ▶ [Watch the 2.5-minute walkthrough](docs/videos/walkthrough.mp4) ·
+[Use cases](https://circuitcheck.mintlify.site/use-cases) · [circuitcheck vs circuit-tracer](https://circuitcheck.mintlify.site/vs-circuit-tracer)
 
 It grew out of [steerlab's circuits episodes](https://albertlieyingadrian.github.io/steerlab/experiments/#circuits).
 In [a password lock](https://albertlieyingadrian.github.io/steerlab/experiments/lock-circuit/report/) and

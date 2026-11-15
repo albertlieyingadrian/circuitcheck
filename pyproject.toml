@@ -44,7 +44,7 @@ circuitcheck = "circuitcheck.cli:app"
 [project.urls]
 Homepage = "https://github.com/albertlieyingadrian/circuitcheck"
 Source = "https://github.com/albertlieyingadrian/circuitcheck"
-Documentation = "https://github.com/albertlieyingadrian/circuitcheck/tree/main/docs"
+Documentation = "https://circuitcheck.mintlify.site"
 Changelog = "https://github.com/albertlieyingadrian/circuitcheck/blob/main/CHANGELOG.md"
 
 [dependency-groups]

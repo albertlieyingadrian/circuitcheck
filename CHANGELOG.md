@@ -6,6 +6,7 @@ All notable changes to circuitcheck. The format follows [Keep a Changelog](https
 
 ### Changed
 
+- The docs are hosted at https://circuitcheck.mintlify.site; the README and package metadata link there.
 - Install instructions, the walkthrough video and the agent skill use `pip install circuitcheck` from PyPI; the README shows PyPI, Python, CI and licence badges.
 
 ## [0.1.0] - 2026-11-14
