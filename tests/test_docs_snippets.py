@@ -101,7 +101,7 @@ def _check_signature(body: str) -> None:
     for m in re.finditer(r"(\w+)\((.*?)\)\s*->", text):
         name, params = m.group(1), m.group(2)
         fn = None
-        for mod in ("circuitcheck.diff", "circuitcheck.validate", "circuitcheck.labels"):
+        for mod in ("circuitcheck.diff", "circuitcheck.validate", "circuitcheck.labels", "circuitcheck.lens"):
             fn = getattr(importlib.import_module(mod), name, None) or fn
         assert fn is not None, f"{name} not found"
         documented = [p.split("=")[0].strip().split(":")[0].strip("* ") for p in params.split(",")]

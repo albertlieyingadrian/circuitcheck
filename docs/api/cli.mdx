@@ -1,6 +1,6 @@
 ---
 title: "Command line"
-description: "circuitcheck diff, summarize, validate, label and version."
+description: "circuitcheck diff, summarize, validate, label, lens, edges and version."
 ---
 
 ```bash
@@ -13,6 +13,8 @@ circuitcheck --help
 | `circuitcheck diff FILE --before G --after G [--control-before G --control-after G] [--replication-before G --replication-after G] [--top-k 10] [--min-present 6] [--html P] [--json P]` | Diff two groups |
 | `circuitcheck validate --demo` or `--model M --transcoders T --prompt P --features L:F@POS,... --target T --contrast C [--counterfactual P]` | Validate features |
 | `circuitcheck label --neuronpedia MODEL/SOURCE --features I,J` or `--records FILE` `[--provider anthropic\|openai] [--model M] [--score detection\|simulation\|both\|none] [--compare] [--export P]` | Label features |
+| `circuitcheck lens --demo` or `--model M --transcoders T --features L:F[=DOSE],L:nN+,... [--contexts FILE] [--r-lens hub\|PATH] [--n-random 16] [--dose-scale 1]` | Lens reads against steering, against random units |
+| `circuitcheck edges --demo` or `FILE --group G (--catalog P \| --neuron-lens MODEL) [--table edges\|sources] [--unit-map P] [--top N]` | Graph edges against a whole-model catalog, against rewired graphs |
 | `circuitcheck version` | Print the version |
 
 Every command that produces a report takes `--html` and `--json`.

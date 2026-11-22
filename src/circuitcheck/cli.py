@@ -1,9 +1,11 @@
-"""The `circuitcheck` command: `diff`, `summarize`, `validate`, `label` and `version`.
+"""The `circuitcheck` command: `diff`, `summarize`, `validate`, `label`, `lens`, `edges` and `version`.
 
 circuitcheck diff graphs.json.gz --before installed/before --after installed/after --html diff.html
 circuitcheck summarize graph_*.pt --group after --out graphs.json.gz
 circuitcheck validate --demo --html validate.html
 circuitcheck label --neuronpedia gemma-2-2b/20-gemmascope-transcoder-16k --features 15589,4012 --html labels.html
+circuitcheck lens --demo --html lens.html
+circuitcheck edges --demo --html edges.html
 """
 
 from __future__ import annotations
@@ -230,6 +232,141 @@ def label(
         json_out,
         html,
     )
+
+
+DEFAULT_CONTEXTS = [
+    "The museum opened in 1924 and has since grown into one of the largest collections of regional art in the "
+    "country, with paintings, textiles, ceramics and photographs donated by families from across the valley. Its "
+    "west wing, added after the war, holds the maps and letters of the early settlers, and every spring",
+    "To repot a plant, water it the day before so the roots hold together. Choose a pot one size larger, with a "
+    "drainage hole, and cover the bottom with fresh soil. Tip the plant out gently, loosen the outer roots with your "
+    "fingers, set it at the same depth as before and fill around it, pressing lightly. Water again and keep",
+    "The committee met on Thursday to review the budget for the coming year. Members agreed to keep spending on "
+    "roads at last year's level, to raise the library's share slightly and to set aside a reserve for repairs to "
+    "the school roof, which inspectors had flagged in the autumn. A final vote is expected next month after",
+    "Rivers carry sediment from the mountains to the sea. Where the current slows, at a bend or where the river "
+    "meets the ocean, the heavier grains settle first and the finer clay travels further. Over centuries these "
+    "deposits build deltas, floodplains and sandbars, and they shift whenever a large flood changes the channel, so",
+]
+
+
+@app.command()
+def lens(
+    demo: Annotated[bool, typer.Option(help="run on the built-in toy model (no GPU, no downloads)")] = False,
+    model: Annotated[str | None, typer.Option(help="HF model id for circuit-tracer")] = None,
+    transcoders: Annotated[str | None, typer.Option(help="transcoder set (HF id or local path)")] = None,
+    features: Annotated[
+        str | None, typer.Option(help="comma-separated layer:feature[=dose], or layer:nNEURON+/- for neuron poles")
+    ] = None,
+    contexts: Annotated[Path | None, typer.Option(help="text file, one neutral context per line")] = None,
+    r_lens: Annotated[
+        str | None, typer.Option(help="R-lens .pt file, or 'hub' for neuron-lens's release (Qwen3, Gemma 4)")
+    ] = None,
+    n_random: int = 16,
+    dose_scale: float = 1.0,
+    n_boot: int = 2000,
+    seed: int = 0,
+    device: Annotated[str | None, typer.Option(help="cuda, mps or cpu")] = None,
+    html: Annotated[Path | None, typer.Option(help="write the HTML report here")] = None,
+    json_out: Annotated[Path | None, typer.Option("--json", help="write the JSON report here")] = None,
+) -> None:
+    """Does each unit's lens read predict what steering it does? Against random units of the same layer and norm."""
+    from circuitcheck.lens import LensUnit, lens_predicts_steering
+    from circuitcheck.report import render_lens
+
+    if demo:
+        from circuitcheck.lens.toy import demo as toy
+        from circuitcheck.lens.toy import demo_units
+
+        rep = lens_predicts_steering(
+            toy(), demo_units(), n_random=n_random, dose_scale=dose_scale, n_boot=n_boot, seed=seed, label_top=3
+        )
+    else:
+        if not (model and transcoders and features):
+            raise typer.BadParameter("give --demo, or all of --model --transcoders --features")
+        import torch
+        from circuit_tracer import ReplacementModel
+
+        from circuitcheck.tracer import TracerLensBackend
+
+        units = []
+        for spec in features.split(","):
+            spec, _, dose = spec.strip().partition("=")
+            layer, idx = spec.split(":")
+            if idx.startswith("n"):
+                sign = -1 if idx.endswith("-") else 1
+                units.append(LensUnit(layer=int(layer), index=int(idx[1:].rstrip("+-")), kind="neuron", sign=sign))
+            else:
+                units.append(LensUnit(layer=int(layer), index=int(idx), dose=float(dose) if dose else None))
+        dev = torch.device(device) if device else None
+        rm = ReplacementModel.from_pretrained(model, transcoders, device=dev, dtype=torch.float32)
+        if r_lens == "hub":
+            from circuitcheck.lens.neuron_lens import r_lens_path
+
+            r_lens = str(r_lens_path(model))
+        texts = contexts.read_text(encoding="utf-8").splitlines() if contexts else DEFAULT_CONTEXTS
+        backend = TracerLensBackend(rm, [t for t in texts if t.strip()], r_lens=r_lens)
+        rep = lens_predicts_steering(
+            backend, units, n_random=n_random, dose_scale=dose_scale, n_boot=n_boot, seed=seed, progress=typer.echo
+        )
+    for s in rep.summary.values():
+        typer.echo(f"  {s.verdict}; difference {s.diff.value:+.2f} [{s.diff.low:+.2f}, {s.diff.high:+.2f}]")
+    for u in rep.flagged():
+        typer.echo(f"  flagged {u.unit.name()}: " + "; ".join(u.flags))
+    _write(rep.model_dump_json(indent=1), render_lens(rep), json_out, html)
+
+
+@app.command()
+def edges(
+    file: Annotated[Path | None, typer.Argument(help="summary file from `summarize`")] = None,
+    demo: Annotated[bool, typer.Option(help="run on a toy catalog and graph (no downloads)")] = False,
+    group: Annotated[str | None, typer.Option(help="group of graphs in FILE; their edges are pooled")] = None,
+    catalog: Annotated[Path | None, typer.Option(help="edge catalog JSON (EdgeCatalog.save)")] = None,
+    neuron_lens: Annotated[
+        str | None, typer.Option(help="download neuron-lens's catalog for this model id, e.g. Qwen/Qwen3-0.6B")
+    ] = None,
+    table: Annotated[str, typer.Option(help="edges (weight wiring) or sources (drivers at top firings)")] = "edges",
+    unit_map: Annotated[
+        Path | None, typer.Option(help="JSON {unit: [[layer, neuron, sign], ...]} for feature graphs")
+    ] = None,
+    top: Annotated[int | None, typer.Option(help="keep the strongest edges by |weight|")] = None,
+    n_null: int = 200,
+    seed: int = 0,
+    html: Annotated[Path | None, typer.Option(help="write the HTML report here")] = None,
+    json_out: Annotated[Path | None, typer.Option("--json", help="write the JSON report here")] = None,
+) -> None:
+    """What share of a graph's edges does a whole-model edge catalog list? Against degree-matched rewirings."""
+    from circuitcheck.lens import EdgeCatalog, edges_agree
+    from circuitcheck.report import render_edges
+
+    mp = None
+    if demo:
+        from circuitcheck.lens.toy import demo_edges
+
+        g, cat = demo_edges(seed)
+    else:
+        if not (file and group and (catalog or neuron_lens)):
+            raise typer.BadParameter("give --demo, or FILE --group with --catalog or --neuron-lens")
+        from circuitcheck.diff.graphs import load_summaries, parse_unit
+
+        g = {}
+        for summ in load_summaries(file)[group]:
+            for k, w in summ.edges.items():
+                g[k] = g.get(k, 0.0) + w
+        if catalog:
+            cat = EdgeCatalog.load(catalog)
+        else:
+            from circuitcheck.lens.neuron_lens import load_catalog
+
+            layers = {parse_unit(u)[0] for e in g for u in e}
+            cat = load_catalog(str(neuron_lens), layers, table=table)
+        if unit_map:
+            raw = json.loads(unit_map.read_text(encoding="utf-8"))
+            mp = {u: [(int(a), int(b), int(c)) for a, b, c in ps] for u, ps in raw.items()}
+    rep = edges_agree(g, cat, unit_map=mp, top=top, n_null=n_null, seed=seed)
+    typer.echo(f"  {rep.verdict}")
+    typer.echo(f"  compared {rep.n_compared} of {rep.n_edges} edges; skipped {rep.skipped}")
+    _write(rep.model_dump_json(indent=1), render_edges(rep), json_out, html)
 
 
 if __name__ == "__main__":  # pragma: no cover

@@ -1,4 +1,4 @@
-"""Self-contained HTML pages for the three tools' results, in an ember-and-cream style.
+"""Self-contained HTML pages for the tools' results, in an ember-and-cream style.
 
 Each `render_*` returns one HTML string with inline CSS and no scripts beyond a theme toggle, so a report can be
 attached to an issue, opened offline, or served as a static file. `save_html` writes it.
@@ -13,6 +13,7 @@ from pathlib import Path
 from circuitcheck.diff.core import DiffReport, UnitChange
 from circuitcheck.labels.autointerp import Calibration, FeatureLabel
 from circuitcheck.labels.neuronpedia import Comparison
+from circuitcheck.lens.types import EdgesReport, Interval, LensReport, UnitResult
 from circuitcheck.validate.types import VERDICT_MEANING, Report, Verdict
 
 CSS = """
@@ -288,3 +289,115 @@ def render_labels(
             f"</th><th>AUROC</th><th></th></tr>{crow}</table></div>"
         )
     return page(title, f"{len(labels)} features", body)
+
+
+# ---------------------------------------------------------------- lens
+
+
+def _ci(x: Interval) -> str:
+    if x.low != x.low:
+        return f(x.value, 2)
+    return f"{f(x.value, 2)} <span class=meta>[{f(x.low, 2)}, {f(x.high, 2)}]</span>"
+
+
+def _unit_row(u: UnitResult, lenses: Sequence[str]) -> str:
+    cells = "".join(
+        f"<td class=n>{f(u.scores[n].rho, 2)}</td><td class=n>{f(u.scores[n].mismatched_rho, 2)}</td>" for n in lenses
+    )
+    first = u.scores[lenses[0]]
+    label = ""
+    if u.label_check:
+        lc = u.label_check
+        ok = [n for n, v in lc.agrees_lens.items() if v] + (["steering"] if lc.agrees_steering else [])
+        label = f"{e(lc.label)}<div class=meta>names: {e(', '.join(ok) or 'neither')}</div>"
+    flags = "".join(f"<li>{e(x)}</li>" for x in u.flags)
+    return (
+        f"<tr><td><b>{e(u.unit.name())}</b><div class=meta>dose {f(u.dose, 2)}, push {f(u.write_norm, 2)}</div></td>"
+        f"{cells}<td><code>{e(' '.join(repr(t) for t in first.top[:6]))}</code></td>"
+        f"<td><code>{e(' '.join(repr(t) for t in u.steer_top[:6]))}</code></td><td>{label}"
+        + (f"<ul class=reasons>{flags}</ul>" if flags else "")
+        + "</td></tr>"
+    )
+
+
+def render_lens(report: LensReport, title: str = "Lens reads against steering") -> str:
+    """The per-lens summary, the per-layer table and every tested unit, with the rules."""
+    lenses = report.lenses
+    kpis = "<div class=kpis>" + "".join(
+        f"<div class=kpi><b>{f(s.median, 2)}</b><span>{e(n)} lens: median rho (random {f(s.random_median, 2)})</span>"
+        f"</div>"
+        for n, s in report.summary.items()
+    )
+    kpis += (
+        f"<div class=kpi><b>{len(report.units)}</b><span>units tested</span></div>"
+        f"<div class=kpi><b>{len(report.flagged())}</b><span>flagged</span></div></div>"
+    )
+    verdicts = "".join(
+        f"<div class=note>{e(s.verdict)}; difference {_ci(s.diff)}</div>" for s in report.summary.values()
+    )
+    layer_rows = "".join(
+        f"<tr><td>{e(r.lens)}</td><td class=n>{r.layer}</td><td class=n>{r.n}</td><td class=n>{_ci(r.median)}</td>"
+        f"<td class=n>{r.n_random}</td><td class=n>{_ci(r.random_median)}</td><td class=n>{_ci(r.diff)}</td>"
+        f"<td class=n>{f(r.mismatched_median, 2)}</td></tr>"
+        for r in report.layers
+    )
+    layers = (
+        "<div class=wrap><table><tr><th>lens</th><th>layer</th><th>units</th><th>median rho [95%]</th><th>random</th>"
+        "<th>random median</th><th>difference</th><th>chance</th></tr>" + layer_rows + "</table></div>"
+    )
+    head = "".join(f"<th>{e(n)} rho</th><th>chance</th>" for n in lenses)
+    units = (
+        f"<div class=wrap><table><tr><th>unit</th>{head}<th>{e(lenses[0])} lens top tokens</th>"
+        "<th>steering raises</th><th>label</th></tr>"
+        + "".join(_unit_row(u, lenses) for u in report.units)
+        + "</table></div>"
+    )
+    rules = "<ul class=reasons>" + "".join(f"<li>{e(r)}</li>" for r in report.rules) + "</ul>"
+    notes = "".join(f"<div class=note>{e(n)}</div>" for n in report.notes)
+    body = (
+        f"<p class=meta>Backend: {e(', '.join(f'{k}={v}' for k, v in report.backend.items()))}<br>"
+        f"{report.n_random} random units a layer · doses x{report.dose_scale:g} · {report.n_boot} bootstrap draws · "
+        f"vocabulary kept: {report.vocab_kept if report.vocab_kept >= 0 else 'all'}</p>"
+        f"{kpis}{verdicts}{notes}<h2>By layer</h2>{layers}<h2>Units</h2>{units}<h2>Rules</h2>{rules}"
+        "<p class=meta>Adapted from neuron-lens's causal check (github.com/stdlogits/neuron-lens, findings §3).</p>"
+    )
+    return page(title, f"circuitcheck {report.version} · seed {report.seed}", body)
+
+
+def render_edges(report: EdgesReport, title: str = "Graph edges against a whole-model catalog") -> str:
+    kpis = (
+        f"<div class=kpis><div class=kpi><b>{f(report.share, pct=True)}</b><span>of compared edges in the catalog"
+        f"</span></div><div class=kpi><b>{f(report.null.value, pct=True)}</b><span>in degree-matched rewirings"
+        f"</span></div><div class=kpi><b>{f(report.p_value)}</b><span>p-value</span></div>"
+        f"<div class=kpi><b>{report.n_compared}/{report.n_edges}</b><span>edges compared</span></div></div>"
+    )
+    gaps = "".join(
+        f"<tr><td>{e(g.gap)}</td><td class=n>{g.n}</td><td class=n>{f(g.share, pct=True)}</td>"
+        f"<td class=n>{f(g.null_share, pct=True)}</td></tr>"
+        for g in report.by_gap
+    )
+
+    def pole(p: tuple[int, int, int]) -> str:
+        return f"L{p[0]}/n{p[1]}{'+' if p[2] > 0 else '-'}"
+
+    present = "".join(
+        f"<tr><td><code>{e(m.source)}</code> → <code>{e(m.target)}</code></td><td class=n>{f(m.weight)}</td>"
+        f"<td class=n>{f(m.catalog_weight)}</td><td><code>{pole(m.via[0])} → {pole(m.via[1])}</code></td>"
+        f"<td>{'same' if m.same_sign else 'opposite'}</td></tr>"
+        for m in report.present[:30]
+    )
+    skipped = ", ".join(f"{k}: {v}" for k, v in report.skipped.items() if v) or "none"
+    notes = "".join(f"<div class=note>{e(n)}</div>" for n in report.notes)
+    rules = "<ul class=reasons>" + "".join(f"<li>{e(r)}</li>" for r in report.rules) + "</ul>"
+    body = (
+        f"<p class=meta>Catalog: {e(', '.join(f'{k}={v}' for k, v in report.catalog.items()))}<br>"
+        f"{report.n_null} rewirings (mean {f(report.rewired, pct=True)} of edges changed) · skipped: {e(skipped)}"
+        f"<br>Null 95% range: {f(report.null.low, pct=True)}-{f(report.null.high, pct=True)} · sign agreement: "
+        f"{f(report.sign_agreement, pct=True)}</p>{kpis}<div class=note>{e(report.verdict)}</div>{notes}"
+        "<h2>By layer gap</h2><table><tr><th>gap</th><th>edges</th><th>in catalog</th><th>rewired</th></tr>"
+        f"{gaps}</table><h2>Graph edges the catalog lists</h2><div class=wrap><table><tr><th>edge</th><th>graph weight"
+        f"</th><th>catalog weight</th><th>via poles</th><th>sign</th></tr>{present}</table></div>"
+        f"<h2>Rules</h2>{rules}<p class=meta>Catalog from neuron-lens (github.com/stdlogits/neuron-lens, findings §12)."
+        "</p>"
+    )
+    return page(title, f"circuitcheck {report.version} · seed {report.seed}", body)

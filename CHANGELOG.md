@@ -4,6 +4,10 @@ All notable changes to circuitcheck. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+### Added
+
+- `circuitcheck.lens`: `lens_predicts_steering` (does a unit's logit-lens or R-lens read predict its measured steering effect, against random units of the same layer and write norm, with label flags) and `edges_agree` (graph edges against neuron-lens's whole-model `edges` and `sources` tables, against degree-matched rewirings), the `lens` and `edges` commands, `TracerLensBackend`, `top_nodes` and `map_features_to_neurons` in `circuitcheck.tracer`, and a `neuronlens` extra for the catalog and lenses.
+
 ### Changed
 
 - The docs are hosted at https://circuitcheck.mintlify.site; the README and package metadata link there.

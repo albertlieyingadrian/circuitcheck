@@ -62,3 +62,37 @@ def test_lock_claimed_group_is_not_a_switch(data_dir) -> None:
         rep = Report.model_validate(raw)
         group = next(g for g in rep.groups if g.name == "claimed 10")
         assert group.verdict not in (Verdict.SWITCH, Verdict.PARTIAL)
+
+
+def test_lens_qwen3_reports_parse_and_follow_neuron_lens(data_dir) -> None:
+    """Qwen3-0.6B (examples/modal/lens_checks.py): the R-lens predicts steering far better than the logit lens before
+    the last layers, as neuron-lens's findings §3 report for Qwen3-8B, and both beat the mismatched-pair chance
+    level."""
+    from circuitcheck.lens import LensReport
+
+    res = _load(data_dir, "lens_qwen3-0.6b")
+    for key in ("lens_features", "lens_neurons"):
+        rep = LensReport.model_validate(res[key])
+        assert rep.lenses == ["logit", "R"] and rep.n_random == 16
+        assert rep.summary["R"].median > rep.summary["logit"].median + 0.2
+        for s in rep.summary.values():
+            assert abs(s.mismatched_median) < 0.1
+            assert s.median > s.mismatched_median + 0.3
+    neurons = LensReport.model_validate(res["lens_neurons"])
+    early = [r for r in neurons.layers if r.layer <= 13]
+    logit = np.median([r.median.value for r in early if r.lens == "logit"])
+    r_lens = np.median([r.median.value for r in early if r.lens == "R"])
+    assert r_lens > logit + 0.25
+    assert all(u.label_check for u in neurons.units)  # every sampled pole has a neuron-lens label
+
+
+def test_lens_qwen3_graph_edges_follow_the_catalog(data_dir) -> None:
+    """Pooled over the three graphs, the catalog lists more graph edges than degree-matched rewirings do."""
+    from circuitcheck.lens import EdgesReport
+
+    res = _load(data_dir, "lens_qwen3-0.6b")
+    for table in ("edges", "sources"):
+        rep = EdgesReport.model_validate(res["edges"][f"pooled/k1/{table}"])
+        assert rep.n_compared == rep.n_edges > 10_000
+        assert rep.share > rep.null.high and rep.p_value <= 0.01
+    assert res["map_cos"]["k1"]["median"] > 5 * res["map_cos"]["k1"]["one_over_sqrt_d"]
