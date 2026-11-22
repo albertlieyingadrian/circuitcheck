@@ -34,3 +34,22 @@ from circuitcheck.tracer import reconstruction_error
 fvu_base = reconstruction_error(base_model, prompts)
 fvu_tuned = reconstruction_error(tuned_model, prompts)
 ```
+
+## `top_nodes(graph, n=30) -> list[FeatureNode]`
+
+The `n` most influential feature nodes of a circuit-tracer `Graph`, with their activation and influence.
+
+## `TracerLensBackend(model, contexts, r_lens=None, vocab_mask=None, ctx_len=64, skip_first=8, batch_size=8)`
+
+Implements `circuitcheck.lens.SteeringBackend` over a `ReplacementModel` with per-layer transcoders:
+
+- a feature's write is its decoder row; a neuron pole's is `sign * W_out[n]`;
+- `logit` reads a write through the model's final norm and unembedding; `R` (when `r_lens` is given: a `.pt` path,
+  `{"J": ...}` or a per-layer sequence of matrices) first multiplies it by the layer's Jacobian;
+- steering adds the vector to the layer's MLP output at every position from `skip_first` on, in each context cut to
+  `ctx_len` tokens, against an unsteered row in the same batch.
+
+## `map_features_to_neurons(model, units, k=1) -> (poles, cosines)`
+
+For `"layer:feature"` units, the `k` MLP neuron poles of the same layer whose writes are closest (by |cosine|) to the
+feature's decoder row, for `circuitcheck.lens.edges_agree`. Report the cosines with any result built on the map.

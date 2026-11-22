@@ -4,7 +4,7 @@
 
 <p align="center"><img src="docs/images/demo.gif" alt="circuitcheck validate --demo: the toy model's planted switch comes back as a switch, its two readouts as readouts and its redundant pair as backups" width="760"></p>
 
-**Test what an attribution graph claims.** circuitcheck is three tools on top of
+**Test what an attribution graph claims.** circuitcheck is a set of tools on top of
 [circuit-tracer](https://github.com/decoderesearch/circuit-tracer) attribution graphs:
 
 | Tool | Question it answers | Runs without a GPU on |
@@ -12,6 +12,8 @@
 | `circuitcheck validate` | Is a group of graph features a **switch** (it causes the behaviour) or a **readout** (it only reflects it)? | the built-in toy model |
 | `circuitcheck diff` | Which features and edges did fine-tuning or RL add or remove, and is the change real? | saved graph summaries |
 | `circuitcheck label` | What does each feature do, in a few words, and how far can that label be trusted? | cached model replies |
+| `circuitcheck lens` | Does a unit's lens read (logit lens or R-lens) predict what steering it does, better than random units of its layer? Does its label name either? | a toy model |
+| `circuitcheck edges` | Do the graph's edges follow the model's whole-model wiring (neuron-lens's catalog), more than rewired graphs do? | a toy catalog |
 
 **Docs: [circuitcheck.mintlify.site](https://circuitcheck.mintlify.site)** · ▶ [Watch the 2.5-minute walkthrough](docs/videos/walkthrough.mp4) ·
 [Use cases](https://circuitcheck.mintlify.site/use-cases) · [circuitcheck vs circuit-tracer](https://circuitcheck.mintlify.site/vs-circuit-tracer)
@@ -97,6 +99,14 @@ test) runs label rules written as code in a checked sandbox. Output is JSON plus
 Every reply is cached. Labels export in Neuronpedia's explanation format, and Neuronpedia's own labels can be scored by
 the same detector for a fair comparison.
 
+**lens** (adapted from [neuron-lens](https://github.com/stdlogits/neuron-lens), MIT). For each unit, a lens's
+next-token read of its write (from the weights alone) is compared with the measured effect of steering it, as a
+Spearman rank correlation over the vocabulary, against random units of the same layer pushed at the same write norm,
+per layer and overall with bootstrap intervals. Units whose label names neither the reads nor the steering are
+flagged. **edges** counts the graph's edges that neuron-lens's whole-model `edges` (weight wiring) or `sources`
+(drivers in context) tables also list, against degree-matched rewirings of the graph, for the models neuron-lens
+covers (Qwen3 0.6B-14B, Gemma 4 12B).
+
 ## Results that reproduce the episodes
 
 - **Graph diff.** On the RL-hack study's 48 graphs, `diff_graphs` picks the same ten features the study did, in the
@@ -115,6 +125,7 @@ src/circuitcheck/
   diff/       graphs.py (summaries and loaders: circuit-tracer .pt, Neuronpedia JSON), core.py (the diff)
   validate/   core.py (checks and verdicts), controls.py, metrics.py, sandbox.py, toy.py
   labels/     autointerp.py (explain, detect, simulate, calibrate), providers.py (Claude, OpenAI, cache), neuronpedia.py
+  lens/       steering.py (lens reads against steering), edges.py (graph edges against a catalog), neuron_lens.py, toy.py
   tracer.py   circuit-tracer adapter and reconstruction error
   report.py   HTML pages
   cli.py      the circuitcheck command

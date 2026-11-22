@@ -1,0 +1,88 @@
+---
+title: "circuitcheck.lens"
+description: "Lens reads against steering, and graph edges against a whole-model catalog."
+---
+
+Adapted from [neuron-lens](https://github.com/stdlogits/neuron-lens) (MIT): its causal lens check (findings §3,
+`scripts/checks/causal_lens.py`) and its whole-model edges and sources (findings §12,
+`scripts/checks/edges_in_context.py`).
+
+## `lens_predicts_steering`
+
+```python signature
+lens_predicts_steering(backend, units, *, lenses=None, n_random=16, dose_scale=1.0, top_k=10, label_top=20,
+                       n_boot=2000, seed=0, label_judge=None, progress=None) -> LensReport
+```
+
+<ParamField path="backend" type="SteeringBackend" required>
+  `TracerLensBackend(model, contexts, r_lens=...)` for circuit-tracer, `toy.demo()` for the toy model, or anything
+  with `write_vectors`, `n_units`, `lens_logits`, `steer`, `lenses`, `token_strings`, `vocab_mask` and `describe`.
+</ParamField>
+<ParamField path="units" type="Sequence[LensUnit]" required>
+  The units under test. `LensUnit(layer, index, kind="feature" | "neuron", sign=1, dose=None, label=None)`. Use
+  `units_from_nodes(nodes)` for graph features: one unit per (layer, feature), its largest activation as the dose.
+</ParamField>
+<ParamField path="lenses" type="Sequence[str]">Defaults to every lens the backend offers (`logit`, and `R` when an R-lens is loaded).</ParamField>
+<ParamField path="n_random" type="int" default="16">Random units drawn from each tested layer, each pushed with the same write norm as a tested unit.</ParamField>
+<ParamField path="dose_scale" type="float" default="1.0">Each unit is steered at `dose_scale x (unit.dose or 1)`.</ParamField>
+<ParamField path="label_top" type="int" default="20">How many top tokens of each read a label is compared with.</ParamField>
+<ParamField path="label_judge" type="Callable[[str, list[str]], bool]">Replaces the default word-matching judge, `label_matches`.</ParamField>
+
+<ResponseField name="LensReport" type="object">
+  <Expandable title="fields">
+    <ResponseField name="units, random_units" type="list[UnitResult]">Per unit: `scores` (per lens: `rho`, `r`, `overlap`, `mismatched_rho`, `top`), `steer_top`, `label_check`, `flags`, `dose`, `write_norm`.</ResponseField>
+    <ResponseField name="layers" type="list[LayerAgreement]">Per lens and layer: tested and random median rho with 95% bootstrap intervals, their difference, and the chance level.</ResponseField>
+    <ResponseField name="summary" type="dict[str, LensSummary]">Per lens: medians, the layer-matched difference from random units with its interval, and the verdict.</ResponseField>
+    <ResponseField name="rules, notes, backend, n_random, n_boot, seed, vocab_kept" type="..." />
+  </Expandable>
+</ResponseField>
+
+`report.flagged()` lists the tested units with a flag: `lens misses` (rho below the 5% point of its layer's random
+units and 0.1 below their median) or `label disagrees` (the label names none of the top tokens of any read nor of the
+steering).
+
+## `edges_agree`
+
+```python signature
+edges_agree(graph_edges, catalog, *, unit_map=None, top=None, n_null=200, seed=0, notes=()) -> EdgesReport
+```
+
+<ParamField path="graph_edges" type="Mapping[(str, str), float] | GraphSummary" required>
+  Edges between `"layer:index"` units with their weights, or a `GraphSummary` from `circuitcheck.diff`.
+</ParamField>
+<ParamField path="catalog" type="EdgeCatalog" required>
+  Directed pole-to-pole edges. `neuron_lens.load_catalog(model_id, layers, table="edges" | "sources")` reads
+  neuron-lens's; `EdgeCatalog.from_rows`, `EdgeCatalog.load` and `EdgeCatalog(pairs, layers)` build others.
+</ParamField>
+<ParamField path="unit_map" type="Mapping[str, list[Pole]] | Callable">
+  A graph unit's catalog poles, `(layer, neuron, sign)`. Defaults to `neuron_poles` (`"L:n"` is both poles, `"L:n+"`
+  one). For transcoder features use `circuitcheck.tracer.map_features_to_neurons`.
+</ParamField>
+<ParamField path="top" type="int">Keep only the strongest edges by |weight|.</ParamField>
+
+<ResponseField name="EdgesReport" type="object">
+  <Expandable title="fields">
+    <ResponseField name="share, n_compared, n_present, skipped" type="...">The share of compared edges the catalog lists, and why the others were skipped.</ResponseField>
+    <ResponseField name="null, p_value, enrichment, rewired" type="...">The share in degree-matched rewirings (mean and 2.5-97.5% range), the empirical p-value, share / null, and how much each rewiring changed.</ResponseField>
+    <ResponseField name="by_gap, present, sign_agreement, verdict, rules, notes" type="..." />
+  </Expandable>
+</ResponseField>
+
+## `circuitcheck.lens.neuron_lens`
+
+Needs `pip install "circuitcheck[neuronlens]"` (huggingface_hub, pyarrow). `COVERED` lists the models: Qwen3 0.6B,
+1.7B, 4B, 8B and 14B (and their base models) and Gemma 4 12B.
+
+| Function | Returns |
+|---|---|
+| `load_catalog(model_id, layers, table="edges")` | `EdgeCatalog` of the `edges` or `sources` table for those layers |
+| `labels(model_id, layer)` | `{(neuron, sign): label}`: neuron-lens's labels of what each pole writes |
+| `r_lens_path(model_id)` | local path of the released R-lens, `{"J": [layers, d, d]}` |
+| `token_counts_path(model_id)` | local path of the catalog's token counts (keep tokens seen 5+ times) |
+
+## Toy backend
+
+`circuitcheck.lens.toy.demo()` is a six-layer model whose writes reach the output through a context-dependent map:
+the logit lens reads early layers badly, the toy's R-lens (the average map) reads every layer well. `demo_units()`
+gives a graph's worth of units, with one correct and one wrong label. `demo_edges()` gives a toy catalog and a graph
+whose edges partly follow it.

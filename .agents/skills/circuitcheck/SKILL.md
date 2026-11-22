@@ -19,6 +19,8 @@ cached model replies let every tool run offline. Real models need circuit-tracer
 | "Does this feature / circuit cause X?" "Is the graph right?" | validate | `circuitcheck validate` |
 | "What did fine-tuning / RL change?" "Compare checkpoints" | diff | `circuitcheck summarize`, then `circuitcheck diff` |
 | "What does feature L:F do?" "Label these features" | labels | `circuitcheck label` |
+| "Does the lens read predict steering?" "Is this label right?" | lens | `circuitcheck lens` |
+| "Do the graph's edges match the model's wiring?" | edges | `circuitcheck edges` |
 
 ## Start here (offline, instant, pre-approved)
 
@@ -81,6 +83,20 @@ Run `circuitcheck label --records feats.json --score both --cache labels.jsonl`,
 - The cache in `examples/data/labels_llm_cache.jsonl` answers the bundled examples without a key.
 - Trust `detection.auroc`, where 0.9 or more is good. Stated `confidence` does not predict quality (r = 0.11 in our
   runs).
+
+## Lens and edges (offline demos; real models load on a GPU: ask first)
+
+`circuitcheck lens --demo` and `circuitcheck edges --demo` run on toy data. On a real model,
+`circuitcheck.tracer.TracerLensBackend(model, contexts, r_lens=neuron_lens.r_lens_path(model_id))` and
+`lens_predicts_steering(backend, units_from_nodes(top_nodes(graph, 30)))`; `edges_agree(summary, load_catalog(model_id,
+layers), unit_map=map_features_to_neurons(model, units)[0])`. `examples/modal/lens_checks.py` runs both on Qwen3-0.6B.
+
+- Report each lens's `summary[...].verdict` and `diff` interval: graph units against random units of the same layer and
+  write norm, not an absolute bar. Quote `mismatched_median` as the chance level.
+- `lens misses` and `label disagrees` flags are leads to look at, not findings.
+- For edges, report `share` against `null` with `p_value`, `n_compared` and `skipped`, and the feature-to-neuron map's
+  cosines: transcoder features are not neurons, so the map is approximate.
+- The R-lens and catalog exist only for neuron-lens's models (Qwen3 0.6B-14B, Gemma 4 12B).
 
 ## Don't
 

@@ -57,7 +57,8 @@
         "pages": [
           "guides/diff",
           "guides/validate",
-          "guides/labels"
+          "guides/labels",
+          "guides/lens"
         ]
       },
       {
@@ -74,6 +75,7 @@
           "api/diff",
           "api/validate",
           "api/labels",
+          "api/lens",
           "api/tracer",
           "api/cli"
         ]

@@ -1,0 +1,118 @@
+---
+title: "Lens checks"
+description: "Does a unit's lens read predict what steering it does? Do a graph's edges follow the model's wiring?"
+---
+
+Two checks borrowed from [neuron-lens](https://github.com/stdlogits/neuron-lens), a public atlas of every MLP neuron
+in Qwen3 (0.6B to 14B) and Gemma 4 12B. Both ask whether what a graph or a label says about a unit holds up in the
+model, against controls.
+
+## Lens reads against steering
+
+A unit (a transcoder feature or a neuron) *writes* a vector into the residual stream. A **lens** turns that vector into
+next-token logits from the weights alone, with no forward pass:
+
+- the **logit lens** applies the final norm and the unembedding directly. It ignores every layer after the unit's, so
+  it reads early layers badly;
+- the **R-lens** (neuron-lens's Jacobian lens) first carries the vector to the last layer with a fitted matrix per
+  layer, then unembeds it.
+
+**Steering** measures what the write actually does: add `dose x write` at the unit's layer in a few neutral texts, and
+record how every token's log-probability changes. If the lens read is right, the tokens it ranks high are the tokens
+steering raises.
+
+<Steps>
+  <Step title="Rank agreement">
+    Spearman rho between the lens's logits and the steering effect, over the vocabulary. 1 means the lens ranks the
+    tokens exactly as steering moves them; 0 means no relation.
+  </Step>
+  <Step title="Random units">
+    `n_random` units from the same layer, each pushed with the same write norm as a tested unit, go through the same
+    steps. Graph features are compared with ordinary units of their layer, not with an absolute bar.
+  </Step>
+  <Step title="Chance">
+    Another unit's read against this unit's steering: what any two writes of the layer share.
+  </Step>
+  <Step title="Intervals">
+    Per layer and overall, the median rho of tested units minus that of random units, with a 95% bootstrap interval.
+  </Step>
+  <Step title="Labels">
+    A label agrees with a read when one of its words names one of the read's top tokens. A unit whose label names
+    neither any lens read nor the steering is flagged.
+  </Step>
+</Steps>
+
+On the toy model (no GPU), the logit lens reads layer 1 badly and the last layer well, the R-lens reads every layer,
+and the feature labelled "Texas cities" that actually writes " Paris" is flagged:
+
+```python
+from circuitcheck.lens import lens_predicts_steering
+from circuitcheck.lens.toy import demo, demo_units
+
+report = lens_predicts_steering(demo(), demo_units(), n_random=16, label_top=3)
+for row in report.layers:
+    print(row.lens, row.layer, round(row.median.value, 2), round(row.random_median.value, 2))
+print([u.unit.name() for u in report.flagged()])
+```
+
+```bash
+circuitcheck lens --demo --html lens.html
+```
+
+### On a real model
+
+```python gpu
+from circuit_tracer import ReplacementModel, attribute
+from circuitcheck.lens import lens_predicts_steering, units_from_nodes
+from circuitcheck.lens import neuron_lens
+from circuitcheck.tracer import TracerLensBackend, top_nodes
+
+model = ReplacementModel.from_pretrained("Qwen/Qwen3-0.6B", "mwhanna/qwen3-0.6b-transcoders-lowl0")
+graph = attribute("Fact: the capital of the state containing Dallas is", model)
+units = units_from_nodes(top_nodes(graph, 30))
+backend = TracerLensBackend(model, contexts, r_lens=neuron_lens.r_lens_path("Qwen/Qwen3-0.6B"))
+report = lens_predicts_steering(backend, units)
+```
+
+`contexts` is a list of neutral paragraphs of at least 64 tokens (the example uses WikiText). The R-lens is available
+for the models neuron-lens covers; for other models only the logit lens runs. `examples/modal/lens_checks.py` runs
+this on Qwen3-0.6B; its results are in `examples/data/live/lens_qwen3-0.6b.json`.
+
+## Graph edges against the model's wiring
+
+An attribution graph's edges say which unit fed which on one prompt. neuron-lens lists, for every neuron pole, its 64
+strongest **edges** from the weights (one pole's write against a later pole's read direction) and its 64 strongest
+**sources** at its top firings in real text. `edges_agree` counts the graph edges these tables also list, and compares
+the share with **degree-matched rewirings** of the graph: the same units with the same number of edges in and out,
+connected at random (only to later layers). A graph that follows the model's wiring beats its rewirings.
+
+```python
+from circuitcheck.lens import edges_agree
+from circuitcheck.lens.toy import demo_edges
+
+graph, catalog = demo_edges()
+report = edges_agree(graph, catalog)
+print(report.verdict)
+```
+
+```bash
+circuitcheck edges --demo --html edges.html
+```
+
+Graph units are `"layer:index"`. A neuron graph maps to catalog poles directly. Transcoder features are not neurons,
+so `circuitcheck.tracer.map_features_to_neurons` maps each feature to the neuron poles of its layer whose writes are
+closest to the feature's decoder row, and returns those cosines too. The map is approximate (a feature mixes many
+neurons), and the rewired graphs use the same map, so the comparison stays fair.
+
+<Warning>
+  Catalog edges are direct paths at one position, from the weights. Attribution-graph edges also run through
+  attention between positions. Expect partial overlap at best; the check asks whether it beats rewired graphs.
+</Warning>
+
+| Report field | Meaning |
+|---|---|
+| `share` | Share of compared graph edges the catalog lists |
+| `null` | Mean share in rewired graphs, with its 2.5-97.5% range |
+| `p_value` | (1 + rewirings with at least the observed share) / (rewirings + 1) |
+| `sign_agreement` | Of the listed edges, the share whose sign matches the catalog's |
+| `skipped` | Edges not compared: unmapped units, layers not loaded, or not forward |
