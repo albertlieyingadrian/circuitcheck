@@ -8,6 +8,8 @@ All notable changes to circuitcheck. The format follows [Keep a Changelog](https
 
 - `circuitcheck.lens`: `lens_predicts_steering` (does a unit's logit-lens or R-lens read predict its measured steering effect, against random units of the same layer and write norm, with label flags) and `edges_agree` (graph edges against neuron-lens's whole-model `edges` and `sources` tables, against degree-matched rewirings), the `lens` and `edges` commands, `TracerLensBackend`, `top_nodes` and `map_features_to_neurons` in `circuitcheck.tracer`, and a `neuronlens` extra for the catalog and lenses.
 
+- `circuitcheck.neurons` (extra `circuitcheck[neurons]`, through neuronkit): `validate`, `label` and `diff` on raw MLP neurons with no transcoders. `NeuronBackend` makes a node one neuron at one token position, with controls drawn from the same layer and position or matched by write size, and `subcircuit_group` turns a neuron's direct-path drivers into a group to validate. `label_neuron` tests a description by prediction, simulation (the share of ablation damage recovered, the trust score) and optional writing. `diff_neurons` compares tail-firing rates before and after training with the paired swap null. There is also a planted toy transformer, the `circuitcheck neurons validate|label|diff` commands (each with `--demo`), and a Neurons docs page.
+
 ### Changed
 
 - The docs are hosted at https://circuitcheck.mintlify.site; the README and package metadata link there.

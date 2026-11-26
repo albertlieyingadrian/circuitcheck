@@ -58,7 +58,8 @@
           "guides/diff",
           "guides/validate",
           "guides/labels",
-          "guides/lens"
+          "guides/lens",
+          "guides/neurons"
         ]
       },
       {

@@ -15,6 +15,7 @@ viewer. circuitcheck sits on top of it and needs it only for real models.
 | Across models | Run it twice and compare by eye | A diff with a swap null, stability check, control run, replication seed and validity check |
 | Labels | Neuronpedia's, where hosted | Cheap autointerp for any transcoder, with held-out detection and simulation scores |
 | Output | Graph files and a viewer | JSON and self-contained HTML reports |
+| Units | Transcoder features | Transcoder features, or the model's raw MLP neurons ([no transcoders](/guides/neurons)) |
 | Needs a GPU | Yes | Only for real-model validation and new graphs |
 
 ## When to use which
@@ -24,6 +25,17 @@ viewer. circuitcheck sits on top of it and needs it only for real models.
   write "computes".
 - **Studying fine-tuning or RL?** Graphs from circuit-tracer on both checkpoints, then `circuitcheck diff`.
 - **Many features without labels?** `circuitcheck label`, sorted by score.
+- **No transcoders for your model, or you want the model's own units?** `circuitcheck neurons validate`, `label` and
+  `diff` run the same checks on raw MLP neurons and their subcircuits, through
+  [neuronkit](https://github.com/albertlieyingadrian/neuronkit). circuit-tracer is not needed.
+
+## Without transcoders
+
+circuit-tracer's graphs need a transcoder for every layer, and the transcoders were trained on one model. circuitcheck
+also runs on the model's raw MLP neurons. A node is one neuron at one token position, and interventions are direct
+edits of its activation. Controls are other neurons of the same layer and position, or ones with the same write
+size, and labels are tested by how much of the neuron's ablation damage their simulated activations recover. Nothing
+is reconstructed, so a fine-tuned model has no stale dictionary to check. See [Neurons](/guides/neurons).
 
 ## Why both exist
 

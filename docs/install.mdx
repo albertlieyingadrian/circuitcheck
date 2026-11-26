@@ -45,6 +45,12 @@ export ANTHROPIC_API_KEY=...   # read by the Anthropic SDK; circuitcheck never p
 pip install "circuitcheck[openai]"
 export OPENAI_API_KEY=...
 ```
+
+```bash Neurons install
+# raw MLP neurons, no transcoders (circuitcheck.neurons): neuronkit, torch and transformers
+pip install "git+https://github.com/albertlieyingadrian/neuronkit"   # until neuronkit is on PyPI
+pip install "circuitcheck[neurons]"
+```
 </CodeGroup>
 
 ## Check it works

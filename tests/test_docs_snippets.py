@@ -7,12 +7,15 @@
   exist. `examples/modal/live_checks.py` runs the same calls on real models.
 - Blocks marked `signature` must match the real function's parameters.
 - Blocks marked `install` or `network` are not run (package installs and live API calls).
+- Blocks marked `neurons` need neuronkit and torch (`circuitcheck[neurons]`): they run when those are installed and
+  are skipped otherwise.
 """
 
 from __future__ import annotations
 
 import ast
 import importlib
+import importlib.util
 import inspect
 import re
 import shlex
@@ -67,6 +70,8 @@ def test_snippet(where: str, lang: str, meta: str, body: str, tmp_path: Path) ->
     words = set(meta.lower().split())
     if words & {"install", "network"}:
         pytest.skip(f"{where}: {meta} block, not run")
+    if "neurons" in words and not all(importlib.util.find_spec(m) for m in ("neuronkit", "torch", "transformers")):
+        pytest.skip(f"{where}: neurons block, needs circuitcheck[neurons]")
     if lang == "python" and "signature" in words:
         _check_signature(body)
         return

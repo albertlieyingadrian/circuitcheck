@@ -6,13 +6,14 @@ circuitcheck validate --demo --html validate.html
 circuitcheck label --neuronpedia gemma-2-2b/20-gemmascope-transcoder-16k --features 15589,4012 --html labels.html
 circuitcheck lens --demo --html lens.html
 circuitcheck edges --demo --html edges.html
+circuitcheck neurons validate --demo --html neurons.html     (also: neurons label, neurons diff)
 """
 
 from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Any
 
 import typer
 
@@ -367,6 +368,193 @@ def edges(
     typer.echo(f"  {rep.verdict}")
     typer.echo(f"  compared {rep.n_compared} of {rep.n_edges} edges; skipped {rep.skipped}")
     _write(rep.model_dump_json(indent=1), render_edges(rep), json_out, html)
+
+
+neurons_app = typer.Typer(
+    no_args_is_help=True,
+    help="validate, label and diff on raw MLP neurons (no transcoders), through neuronkit (install the neurons extra).",
+)
+app.add_typer(neurons_app, name="neurons")
+
+
+def _hf(model: str, device: str | None) -> tuple[Any, Any]:
+    from transformers import AutoModelForCausalLM, AutoTokenizer
+
+    m: Any = AutoModelForCausalLM.from_pretrained(model)
+    m.eval()
+    if device:
+        m = m.to(device)
+    return m, AutoTokenizer.from_pretrained(model)
+
+
+def _lines(path: Path) -> list[str]:
+    return [t for t in path.read_text(encoding="utf-8").splitlines() if t.strip()]
+
+
+@neurons_app.command("validate")
+def neurons_validate(
+    demo: Annotated[bool, typer.Option(help="run on the planted toy transformer (CPU, no downloads)")] = False,
+    model: Annotated[str | None, typer.Option(help="HF model id")] = None,
+    prompt: Annotated[str | None, typer.Option(help="the prompt")] = None,
+    counterfactual: Annotated[
+        str | None, typer.Option(help="a prompt with a different answer, for the patch test")
+    ] = None,
+    neurons: Annotated[
+        str | None, typer.Option(help="comma-separated layer:neuron@pos, e.g. 12:345@-1 (-1 = last token)")
+    ] = None,
+    target: Annotated[str | None, typer.Option(help="answer token, e.g. ' Austin'")] = None,
+    contrast: Annotated[str | None, typer.Option(help="contrast token, e.g. ' Dallas'")] = None,
+    n_controls: int = 20,
+    steer_scale: float = 3.0,
+    seed: int = 0,
+    device: Annotated[str | None, typer.Option(help="cuda, mps or cpu")] = None,
+    html: Annotated[Path | None, typer.Option(help="write the HTML report here")] = None,
+    json_out: Annotated[Path | None, typer.Option("--json", help="write the JSON report here")] = None,
+) -> None:
+    """Is each group of neurons a switch or a readout? Ablation, steering and patching against neuron controls."""
+    from circuitcheck.neurons import NeuronBackend
+    from circuitcheck.report import render_validate
+    from circuitcheck.validate import logit_diff
+    from circuitcheck.validate import validate as run
+
+    if demo:
+        from circuitcheck.neurons import toy
+
+        b, _, _ = toy.demo()
+        prompt, counterfactual = toy.PROMPT, toy.COUNTERFACTUAL
+        target, contrast, specs = toy.TARGET, toy.CONTRAST, toy.demo_specs()
+    else:
+        if not (model and prompt and neurons and target and contrast):
+            raise typer.BadParameter("give --demo, or all of --model --prompt --neurons --target --contrast")
+        m, tok = _hf(model, device)
+        b = NeuronBackend(m, tok)
+        specs = [s.strip() for s in neurons.split(",")]
+    nodes = b.nodes(prompt, specs)
+    metric = logit_diff(b.token_id(target), b.token_id(contrast), target, contrast)
+    rep = run(
+        b,
+        prompt,
+        nodes,
+        metric=metric,
+        counterfactual=counterfactual,
+        n_controls=n_controls,
+        steer_scale=steer_scale,
+        seed=seed,
+        progress=None if demo else typer.echo,
+    )
+    for g in rep.groups:
+        typer.echo(f"  {g.name:>20}  {g.verdict.value}")
+    _write(rep.model_dump_json(indent=1), render_validate(rep, title="Neuron circuit validation"), json_out, html)
+
+
+@neurons_app.command("label")
+def neurons_label(
+    demo: Annotated[
+        bool, typer.Option(help="planted toy transformer and a scripted judge (no downloads, no key)")
+    ] = False,
+    model: Annotated[str | None, typer.Option(help="HF model id")] = None,
+    neurons: Annotated[str | None, typer.Option(help="comma-separated poles, e.g. 12:n345+,14:n880-")] = None,
+    corpus: Annotated[Path | None, typer.Option(help="text file, one document per line")] = None,
+    descriptions: Annotated[
+        Path | None, typer.Option(help="JSON {pole: description} to test instead of writing new ones")
+    ] = None,
+    provider: Annotated[str, typer.Option(help="anthropic (Claude Haiku 5.5) or openai")] = "anthropic",
+    llm_model: Annotated[str | None, typer.Option(help="override the provider's default model")] = None,
+    cache: Annotated[Path | None, typer.Option(help="LLM cache file (JSON lines)")] = None,
+    n_explain: int = 12,
+    n_write: int = 0,
+    device: Annotated[str | None, typer.Option(help="cuda, mps or cpu")] = None,
+    html: Annotated[Path | None, typer.Option(help="write the HTML report here")] = None,
+    json_out: Annotated[Path | None, typer.Option("--json", help="write the labels as JSON here")] = None,
+) -> None:
+    """Describe neuron poles and test each description: predict, simulate (ablation damage recovered) and write."""
+    from circuitcheck.neurons import label_neurons
+    from circuitcheck.report import render_neuron_labels
+
+    given = json.loads(descriptions.read_text(encoding="utf-8")) if descriptions else None
+    m: Any
+    tok: Any
+    llm: Any
+    if demo:
+        from circuitcheck.neurons import toy
+
+        m, tok, llm = toy.model(), toy.CharTokenizer(), toy.judge()
+        texts, poles = toy.CORPUS, ["0:n0+", "1:n0+"]
+        n_explain = min(n_explain, 4)
+    else:
+        if not (model and neurons and corpus):
+            raise typer.BadParameter("give --demo, or all of --model --neurons --corpus")
+        from circuitcheck.labels import make_llm
+
+        m, tok = _hf(model, device)
+        llm = make_llm(provider, llm_model, cache)
+        texts, poles = _lines(corpus), [p.strip() for p in neurons.split(",")]
+    labs = label_neurons(m, tok, texts, poles, llm=llm, descriptions=given, n_explain=n_explain, n_write=n_write)
+    for lab in labs:
+        rec = "  n/a" if lab.recovered is None else f"{lab.recovered:5.0%}"
+        acc = "n/a" if lab.predict_accuracy is None else f"{lab.predict_accuracy:.2f}"
+        typer.echo(f"  {lab.unit:>10}  recovered {rec}  predict {acc}  {lab.label or lab.error}")
+    _write(json.dumps([x.model_dump() for x in labs], indent=1), render_neuron_labels(labs), json_out, html)
+
+
+@neurons_app.command("diff")
+def neurons_diff(
+    demo: Annotated[bool, typer.Option(help="the toy transformer against a copy with one planted change")] = False,
+    before: Annotated[str | None, typer.Option(help="HF model id or path before training")] = None,
+    after: Annotated[str | None, typer.Option(help="HF model id or path after training (same tokenizer)")] = None,
+    control: Annotated[str | None, typer.Option(help="a control run's model (did not learn the behaviour)")] = None,
+    prompts: Annotated[Path | None, typer.Option(help="text file, one prompt per line")] = None,
+    layers: Annotated[str | None, typer.Option(help="comma-separated layers (default: all)")] = None,
+    stat: Annotated[str, typer.Option(help="tail_rate or mean")] = "tail_rate",
+    q: Annotated[float, typer.Option(help="tail percentile from the before model (p q and p 100-q)")] = 99.0,
+    top_k: int = 10,
+    min_present: int = 6,
+    seed: int = 0,
+    device: Annotated[str | None, typer.Option(help="cuda, mps or cpu")] = None,
+    html: Annotated[Path | None, typer.Option(help="write the HTML report here")] = None,
+    json_out: Annotated[Path | None, typer.Option("--json", help="write the JSON report here")] = None,
+) -> None:
+    """Which neurons fire more or less in their tails after training? Paired swap null, BH-corrected."""
+    from circuitcheck.diff.core import Settings
+    from circuitcheck.neurons import diff_neurons
+    from circuitcheck.report import render_diff
+
+    if stat not in ("tail_rate", "mean"):
+        raise typer.BadParameter("--stat is tail_rate or mean")
+    ctrl = None
+    mb: Any
+    tok: Any
+    if demo:
+        from circuitcheck.neurons import toy
+
+        mb, tok = toy.model(), toy.CharTokenizer()
+        ma, texts = toy.finetuned(mb), toy.DIFF_PROMPTS
+    else:
+        if not (before and after and prompts):
+            raise typer.BadParameter("give --demo, or all of --before --after --prompts")
+        mb, tok = _hf(before, device)
+        ma, _ = _hf(after, device)
+        ctrl = _hf(control, device)[0] if control else None
+        texts = _lines(prompts)
+    rep = diff_neurons(
+        mb,
+        ma,
+        tok,
+        texts,
+        stat=stat,  # type: ignore[arg-type]
+        q=q,
+        layers=[int(x) for x in layers.split(",")] if layers else None,
+        control=ctrl,
+        settings=Settings(top_k=top_k, min_present=min_present, seed=seed),
+    )
+    s = rep.summary
+    typer.echo(f"gained {s.n_gained}, lost {s.n_lost}, up {s.n_up}, down {s.n_down}; total change p = {s.change_p:.3f}")
+    for c in rep.top:
+        typer.echo(
+            f"  {c.unit:>12}  {c.status:7} Δ={c.delta:+.4f}  prompts {c.present_before}->{c.present_after}  "
+            f"p={c.p_null:.3f}"
+        )
+    _write(rep.model_dump_json(indent=1), render_diff(rep, title="Neuron diff"), json_out, html)
 
 
 if __name__ == "__main__":  # pragma: no cover

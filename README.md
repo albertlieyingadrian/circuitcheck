@@ -14,6 +14,7 @@
 | `circuitcheck label` | What does each feature do, in a few words, and how far can that label be trusted? | cached model replies |
 | `circuitcheck lens` | Does a unit's lens read (logit lens or R-lens) predict what steering it does, better than random units of its layer? Does its label name either? | a toy model |
 | `circuitcheck edges` | Do the graph's edges follow the model's whole-model wiring (neuron-lens's catalog), more than rewired graphs do? | a toy catalog |
+| `circuitcheck neurons validate\|label\|diff` | The same three questions on the model's raw MLP neurons and their subcircuits, with no transcoders | a planted toy transformer |
 
 **Docs: [circuitcheck.mintlify.site](https://circuitcheck.mintlify.site)** · ▶ [Watch the 2.5-minute walkthrough](docs/videos/walkthrough.mp4) ·
 [Use cases](https://circuitcheck.mintlify.site/use-cases) · [circuitcheck vs circuit-tracer](https://circuitcheck.mintlify.site/vs-circuit-tracer)
@@ -31,6 +32,7 @@ pip install circuitcheck
 # real models: circuit-tracer from GitHub, plus torch
 pip install "git+https://github.com/decoderesearch/circuit-tracer"
 # labels: pip install "circuitcheck[anthropic]" (Claude Haiku 5.5, the default) or "[openai]"
+# raw MLP neurons, no transcoders: pip install "circuitcheck[neurons]" (neuronkit, torch, transformers)
 ```
 
 ## Five-minute tour (no GPU, no key)
@@ -107,6 +109,20 @@ flagged. **edges** counts the graph's edges that neuron-lens's whole-model `edge
 (drivers in context) tables also list, against degree-matched rewirings of the graph, for the models neuron-lens
 covers (Qwen3 0.6B-14B, Gemma 4 12B).
 
+**neurons** (through [neuronkit](https://github.com/albertlieyingadrian/neuronkit)). The same tools on raw MLP
+neurons, after [Neurons as an Interpretable Basis](https://www.goodfire.com/research/neurons-as-an-interpretable-basis).
+A node is one neuron at one token position, so `validate` runs unchanged with `NeuronBackend(model, tokenizer)`. The
+controls are random neurons of the same layer and position and neurons matched by write size (|activation| x
+‖W_down column‖). `subcircuit_group` turns a neuron's direct-path drivers into a group to test. `label_neuron` tests a
+description of one pole three ways: by prediction (firing excerpts against random text), by simulation (the share of
+the neuron's ablation damage that the simulated activations recover, which is the trust score) and, optionally, by
+writing texts that fire it. `diff_neurons` compares each neuron's tail-firing rate before and after training, with
+the paired swap null. With no dictionary, there is no reconstruction caveat. [Neurons guide](https://circuitcheck.mintlify.site/guides/neurons).
+
+```bash
+circuitcheck neurons validate --demo   # planted toy transformer: L0/0 is a switch, L1/0 a readout
+```
+
 ## Results that reproduce the episodes
 
 - **Graph diff.** On the RL-hack study's 48 graphs, `diff_graphs` picks the same ten features the study did, in the
@@ -126,6 +142,7 @@ src/circuitcheck/
   validate/   core.py (checks and verdicts), controls.py, metrics.py, sandbox.py, toy.py
   labels/     autointerp.py (explain, detect, simulate, calibrate), providers.py (Claude, OpenAI, cache), neuronpedia.py
   lens/       steering.py (lens reads against steering), edges.py (graph edges against a catalog), neuron_lens.py, toy.py
+  neurons/    backend.py (NeuronBackend), labels.py (tested descriptions), diff.py (neuron diff), toy.py
   tracer.py   circuit-tracer adapter and reconstruction error
   report.py   HTML pages
   cli.py      the circuitcheck command

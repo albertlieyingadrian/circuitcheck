@@ -141,6 +141,9 @@ class DiffReport(BaseModel):
     edges: list[EdgeChange]
     validity: Validity
     caveats: list[str] = Field(default_factory=lambda: [CAVEAT])
+    basis: Literal["transcoder", "neuron"] = Field(
+        "transcoder", description="what the units are: transcoder features, or MLP neurons (circuitcheck.neurons)"
+    )
 
     def find(self, u: Unit) -> UnitChange | None:
         for group in (self.top, self.gained, self.lost, self.down):
