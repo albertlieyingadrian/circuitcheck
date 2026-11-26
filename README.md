@@ -14,7 +14,7 @@
 | `circuitcheck label` | What does each feature do, in a few words, and how far can that label be trusted? | cached model replies |
 | `circuitcheck lens` | Does a unit's lens read (logit lens or R-lens) predict what steering it does, better than random units of its layer? Does its label name either? | a toy model |
 | `circuitcheck edges` | Do the graph's edges follow the model's whole-model wiring (neuron-lens's catalog), more than rewired graphs do? | a toy catalog |
-| `circuitcheck neurons validate\|label\|diff` | The same three questions on the model's raw MLP neurons and their subcircuits, with no transcoders | a planted toy transformer |
+| `circuitcheck neurons validate\|label\|lens\|diff` | The same questions on the model's raw MLP neurons and their subcircuits, with no transcoders | a planted toy transformer |
 
 **Docs: [circuitcheck.mintlify.site](https://circuitcheck.mintlify.site)** · ▶ [Watch the 2.5-minute walkthrough](docs/videos/walkthrough.mp4) ·
 [Use cases](https://circuitcheck.mintlify.site/use-cases) · [circuitcheck vs circuit-tracer](https://circuitcheck.mintlify.site/vs-circuit-tracer)
@@ -117,7 +117,10 @@ controls are random neurons of the same layer and position and neurons matched b
 description of one pole three ways: by prediction (firing excerpts against random text), by simulation (the share of
 the neuron's ablation damage that the simulated activations recover, which is the trust score) and, optionally, by
 writing texts that fire it. `diff_neurons` compares each neuron's tail-firing rate before and after training, with
-the paired swap null. With no dictionary, there is no reconstruction caveat. [Neurons guide](https://circuitcheck.mintlify.site/guides/neurons).
+the paired swap null. `neuron_lens` treats each pole as a context-gated steering vector ±w (its down-projection
+column), after [Returning to the Neuron Basis for Interpretability](https://alignment.anthropic.com/2026/neuron-basis-theory/):
+does its logit-lens or Jacobian-lens read predict what adding c·w does, against random neurons of the same layer and
+write norm? Poles that never fire with the gate open are flagged. With no dictionary, there is no reconstruction caveat. [Neurons guide](https://circuitcheck.mintlify.site/guides/neurons).
 
 ```bash
 circuitcheck neurons validate --demo   # planted toy transformer: L0/0 is a switch, L1/0 a readout
@@ -142,7 +145,7 @@ src/circuitcheck/
   validate/   core.py (checks and verdicts), controls.py, metrics.py, sandbox.py, toy.py
   labels/     autointerp.py (explain, detect, simulate, calibrate), providers.py (Claude, OpenAI, cache), neuronpedia.py
   lens/       steering.py (lens reads against steering), edges.py (graph edges against a catalog), neuron_lens.py, toy.py
-  neurons/    backend.py (NeuronBackend), labels.py (tested descriptions), diff.py (neuron diff), toy.py
+  neurons/    backend.py (NeuronBackend), labels.py (tested descriptions), lens.py (NeuronLensBackend), diff.py, toy.py
   tracer.py   circuit-tracer adapter and reconstruction error
   report.py   HTML pages
   cli.py      the circuitcheck command

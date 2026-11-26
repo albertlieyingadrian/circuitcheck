@@ -7,7 +7,7 @@ attribution graphs. Its tools:
 - `circuitcheck.validate` tests whether features are a switch or only a readout, against controls;
 - `circuitcheck.labels` writes cheap feature labels with held-out trust scores;
 - `circuitcheck.lens` checks lens reads against steering, and graph edges against neuron-lens's whole-model catalog;
-- `circuitcheck.neurons` runs validate, label and diff on raw MLP neurons (no transcoders), through neuronkit.
+- `circuitcheck.neurons` runs validate, label, lens and diff on raw MLP neurons (no transcoders), through neuronkit.
 
 The docs (Mintlify) are in `docs/`. Explain in plain language, with small worked examples: readers include people new
 to interpretability. The `circuitcheck` skill in `.agents/skills/circuitcheck/` explains how to run each tool.

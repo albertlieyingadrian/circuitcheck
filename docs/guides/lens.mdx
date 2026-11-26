@@ -17,6 +17,9 @@ next-token logits from the weights alone, with no forward pass:
 - the **R-lens** (neuron-lens's Jacobian lens) first carries the vector to the last layer with a fitted matrix per
   layer, then unembeds it.
 
+On raw MLP neurons, with no transcoders, the same check runs through `NeuronLensBackend`: see
+[Neurons](/guides/neurons#lens-is-a-neuron-a-steering-vector-you-can-read).
+
 **Steering** measures what the write actually does: add `dose x write` at the unit's layer in a few neutral texts, and
 record how every token's log-probability changes. If the lens read is right, the tokens it ranks high are the tokens
 steering raises.

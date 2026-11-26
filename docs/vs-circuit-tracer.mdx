@@ -25,8 +25,8 @@ viewer. circuitcheck sits on top of it and needs it only for real models.
   write "computes".
 - **Studying fine-tuning or RL?** Graphs from circuit-tracer on both checkpoints, then `circuitcheck diff`.
 - **Many features without labels?** `circuitcheck label`, sorted by score.
-- **No transcoders for your model, or you want the model's own units?** `circuitcheck neurons validate`, `label` and
-  `diff` run the same checks on raw MLP neurons and their subcircuits, through
+- **No transcoders for your model, or you want the model's own units?** `circuitcheck neurons validate`, `label`, `lens`
+  and `diff` run the same checks on raw MLP neurons and their subcircuits, through
   [neuronkit](https://github.com/albertlieyingadrian/neuronkit). circuit-tracer is not needed.
 
 ## Without transcoders

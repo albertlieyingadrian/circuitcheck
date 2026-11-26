@@ -4,6 +4,14 @@ All notable changes to circuitcheck. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+### Added
+
+- `circuitcheck.neurons.NeuronLensBackend` and `neuron_lens`: the lens check on raw MLP neurons. Each pole is read as a context-gated steering vector ±w (its down-projection column), through the logit lens with the final norm's gain folded in and a same-token Jacobian lens (neuronkit's `readout` when installed, an exact Jacobian-vector product otherwise). Steering adds c·w at the neuron's layer, against random neurons of the same layer and write norm, and poles that never fire with the gate open are flagged. There is also a `circuitcheck neurons lens` command with `--demo`, and a relay pair in the toy transformer that only the Jacobian lens reads.
+
+### Fixed
+
+- `label_neuron` reports `recovered = None` when ablating the neuron barely changes the output (mean KL below `min_ablation_kl`, default 1e-6), instead of a ratio of two near-zero numbers.
+
 ## [0.2.0] - 2026-11-25
 
 ### Added

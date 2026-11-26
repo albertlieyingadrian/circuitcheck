@@ -17,6 +17,7 @@ circuitcheck --help
 | `circuitcheck edges --demo` or `FILE --group G (--catalog P \| --neuron-lens MODEL) [--table edges\|sources] [--unit-map P] [--top N]` | Graph edges against a whole-model catalog, against rewired graphs |
 | `circuitcheck neurons validate --demo` or `--model M --prompt P --neurons L:N@POS,... --target T --contrast C [--counterfactual P]` | Validate MLP neurons (no transcoders): switch or readout against neuron controls |
 | `circuitcheck neurons label --demo` or `--model M --neurons L:nN+,L:nN- --corpus FILE [--descriptions FILE] [--provider anthropic\|openai] [--llm-model M] [--n-write 0]` | Describe neuron poles and test each description (predict, simulate, ablation damage recovered) |
+| `circuitcheck neurons lens --demo` or `--model M --neurons L:nN+,L:nN- [--contexts FILE] [--ctx-len 64] [--skip-first 8] [--n-random 16]` | Each neuron pole's logit- and Jacobian-lens read of ±W_down against its steering, against random neurons; gate-closed poles flagged |
 | `circuitcheck neurons diff --demo` or `--before M --after M --prompts FILE [--control M] [--layers 1,2] [--stat tail_rate\|mean] [--q 99]` | Which neurons fire more or less after training, with the paired swap null |
 | `circuitcheck version` | Print the version |
 
