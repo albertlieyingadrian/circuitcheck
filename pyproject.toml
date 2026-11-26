@@ -6,7 +6,7 @@ build-backend = "uv_build"
 [project]
 name = "circuitcheck"
 # The ONLY place the version lives. Code reads it with importlib.metadata.
-version = "0.1.0"
+version = "0.2.0"
 description = "Tools on top of circuit-tracer: diff attribution graphs across training, validate circuits with controls, and label features cheaply."
 readme = "README.md"
 requires-python = ">=3.11"
