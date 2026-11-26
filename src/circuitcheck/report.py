@@ -14,6 +14,7 @@ from circuitcheck.diff.core import DiffReport, UnitChange
 from circuitcheck.labels.autointerp import Calibration, FeatureLabel
 from circuitcheck.labels.neuronpedia import Comparison
 from circuitcheck.lens.types import EdgesReport, Interval, LensReport, UnitResult
+from circuitcheck.neurons.labels import NeuronLabel
 from circuitcheck.validate.types import VERDICT_MEANING, Report, Verdict
 
 CSS = """
@@ -174,11 +175,13 @@ def _unit_rows(changes: Sequence[UnitChange], extra: bool = False) -> str:
 
 def render_diff(report: DiffReport, title: str = "Attribution graph diff") -> str:
     s, v = report.summary, report.validity
+    neurons = report.basis == "neuron"
+    what = "neurons" if neurons else "features"
     kpis = (
-        f"<div class=kpis><div class=kpi><b>{s.n_gained}</b><span>features gained</span></div>"
-        f"<div class=kpi><b>{s.n_lost}</b><span>features lost</span></div>"
+        f"<div class=kpis><div class=kpi><b>{s.n_gained}</b><span>{what} gained</span></div>"
+        f"<div class=kpi><b>{s.n_lost}</b><span>{what} lost</span></div>"
         f"<div class=kpi><b>{s.n_up}/{s.n_down}</b><span>up / down (beat the null)</span></div>"
-        f"<div class=kpi><b>{f(s.jaccard, pct=True)}</b><span>shared present features</span></div>"
+        f"<div class=kpi><b>{f(s.jaccard, pct=True)}</b><span>shared present {what}</span></div>"
         f"<div class=kpi><b>{f(s.change_p)}</b><span>p, total change vs swap null</span></div></div>"
     )
     stab = (
@@ -222,6 +225,12 @@ def render_diff(report: DiffReport, title: str = "Attribution graph diff") -> st
         if v.ok
         else "".join(f"<div class=note>{e(w)}</div>" for w in v.warnings)
     )
+    validity = f"<table><tr><th></th><th>before</th><th>after</th></tr>{vrows}</table>{verdict}"
+    if neurons:
+        validity = (
+            "<p>The units are the model's own MLP neurons: nothing is reconstructed, so there is no transcoder or "
+            "error node to check.</p>"
+        )
     edges = "".join(
         f"<tr><td><code>{e(x.source)}</code> → <code>{e(x.target)}</code></td><td><span class='pill {x.status}'>"
         f"{x.status}</span></td><td class=n>{f(x.before, 2)}</td><td class=n>{f(x.after, 2)}</td>"
@@ -232,12 +241,11 @@ def render_diff(report: DiffReport, title: str = "Attribution graph diff") -> st
         f"<p class=meta>{e(report.before_name)} → {e(report.after_name)}</p>{kpis}"
         f"<h2>Top {len(report.top)} by increase in influence</h2>{_unit_rows(report.top, extra=True)}"
         f"<h2>Stability and the null</h2>{stab}"
-        f"<h2>Edges among the top features</h2><div class=wrap><table><tr><th>edge</th><th>status</th><th>before</th>"
+        f"<h2>Edges among the top {what}</h2><div class=wrap><table><tr><th>edge</th><th>status</th><th>before</th>"
         f"<th>after</th><th>graphs</th><th>p (null)</th></tr>{edges}</table></div>"
         f"<h2>Gained ({s.n_gained})</h2>{_unit_rows(report.gained[:15])}"
         f"<h2>Lost ({s.n_lost})</h2>{_unit_rows(report.lost[:15])}"
-        f"<h2>Validity</h2><table><tr><th></th><th>before</th><th>after</th></tr>{vrows}</table>{verdict}"
-        + "".join(f"<div class=note>{e(c)}</div>" for c in report.caveats)
+        f"<h2>Validity</h2>{validity}" + "".join(f"<div class=note>{e(c)}</div>" for c in report.caveats)
     )
     return page(title, f"circuitcheck {report.version} · seed {report.settings.seed}", body)
 
@@ -289,6 +297,28 @@ def render_labels(
             f"</th><th>AUROC</th><th></th></tr>{crow}</table></div>"
         )
     return page(title, f"{len(labels)} features", body)
+
+
+def render_neuron_labels(labels: Sequence[NeuronLabel], title: str = "Neuron descriptions, tested") -> str:
+    """Neuron poles with their description and its three tests: predict, simulate (damage recovered) and write."""
+    rows = "".join(
+        f"<tr><td><code>{e(x.unit)}</code></td><td>{e(x.label) or '<i>none</i>'}"
+        f"{'<div class=meta>' + e(x.error) + '</div>' if x.error else ''}</td>"
+        f"<td class=n>{f(x.predict_accuracy, 2)}</td><td class=n>{f(x.predict_auroc, 2)}</td>"
+        f"<td class=n><b>{f(x.recovered, pct=True)}</b><div class=meta>ablation KL {f(x.ablation_kl, 4)}</div></td>"
+        f"<td class=n>{f(x.write_best, 2)}<div class=meta>corpus max {f(x.reference_max, 2)}</div></td></tr>"
+        for x in labels
+    )
+    body = (
+        "<p class=meta>Predict: does the judge, given the description, tell held-out firing excerpts from random "
+        "text (balanced accuracy, AUROC)? Simulate: the judge's token-level activations from the description are "
+        "patched in for the real ones; <b>recovered</b> is the share of the damage from zero-ablating the neuron "
+        "there that they undo, 1 - KL(simulated) / KL(ablated). It is the trust score. Write: the strongest firing "
+        "on texts the judge wrote to fire the neuron.</p>"
+        "<div class=wrap><table><tr><th>pole</th><th>description</th><th>predict acc.</th><th>predict AUROC</th>"
+        f"<th>recovered</th><th>write</th></tr>{rows}</table></div>"
+    )
+    return page(title, f"{len(labels)} neuron poles", body)
 
 
 # ---------------------------------------------------------------- lens

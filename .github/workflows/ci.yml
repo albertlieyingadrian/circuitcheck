@@ -46,6 +46,27 @@ jobs:
       - name: pytest (notebooks and every docs snippet included)
         run: pytest
 
+  neurons:
+    name: pytest with neuronkit (circuitcheck[neurons])
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v6
+      - name: Install
+        run: |
+          uv venv --python 3.12
+          echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
+          uv pip install -e ".[dev]"
+          uv pip install torch --index-url https://download.pytorch.org/whl/cpu
+      - name: Install neuronkit from GitHub (not on PyPI yet)
+        env:
+          GIT_TERMINAL_PROMPT: "0"
+        run: |
+          uv pip install "git+https://github.com/albertlieyingadrian/neuronkit" \
+            || echo "::warning::neuronkit could not be installed; the neuron tests will be skipped"
+      - name: pytest (neuron tests and docs snippets included)
+        run: pytest -rs
+
   build:
     name: build the package
     runs-on: ubuntu-latest

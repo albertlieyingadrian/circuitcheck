@@ -1,0 +1,225 @@
+---
+title: "Neurons"
+description: "Run validate, label and diff on a model's raw MLP neurons and their subcircuits, with no transcoders."
+---
+
+circuitcheck's checks were built for transcoder features in circuit-tracer graphs. They work just as well on the
+model's own **MLP neurons**, through [neuronkit](https://github.com/albertlieyingadrian/neuronkit). No transcoder is
+trained, so nothing is reconstructed and there is no error node to worry about.
+
+## What a neuron node is
+
+Inside each MLP block, a SwiGLU model computes, for every token, one number per neuron:
+
+```text
+activation = act(gate · x) × (up · x)        # then down_proj writes activation × W_down[:, n] into the residual stream
+```
+
+A **neuron node** is that number for one neuron at one token position: `(layer, neuron index, position)`. It uses
+circuitcheck's usual `FeatureNode`, with `feature` holding the neuron index, so every tool reads it unchanged. Two
+things differ from a transcoder feature:
+
+- a neuron is almost never exactly zero, so every neuron of a layer counts as active at every position. The random
+  controls are uniformly random neurons of the same layer and position, and the matched-norm controls are the
+  neurons whose write, |activation| × ‖W_down column‖, is closest in size;
+- a neuron has two ends, or **poles**: what makes it fire strongly positive and what makes it fire strongly negative.
+  Labels describe one pole at a time, written `12:n345+` or `12:n345-`.
+
+The approach follows [Neurons as an Interpretable Basis](https://www.goodfire.com/research/neurons-as-an-interpretable-basis):
+read the raw neurons one pole at a time, describe each from its strongest firings, and test every description in
+the model.
+
+## Install
+
+```bash install
+pip install "circuitcheck[neurons]"   # neuronkit, torch and transformers
+```
+
+<Note>
+  Until neuronkit is on PyPI, install it from GitHub first:
+  `pip install "git+https://github.com/albertlieyingadrian/neuronkit"`.
+</Note>
+
+## Try it on the toy (CPU, no downloads, no key)
+
+The toy is a real two-layer Qwen2 with a one-character-per-token tokenizer and a few neurons set by hand. The
+letters stand for cities: `D` is Dallas, `O` is Oakland, `A` is Austin and `S` is Sacramento.
+
+- `L0/N0` is a **switch**: it fires on `D` and writes the direction the output reads as `A`.
+- `L1/N0` is a **readout**: it fires just as hard on `D`, because it reads what the switch wrote, but it writes into
+  a direction nothing downstream uses.
+
+```bash neurons
+circuitcheck neurons validate --demo     # L0/0 is a switch, L1/0 a readout
+circuitcheck neurons label --demo        # each description, with the share of ablation damage it recovers
+circuitcheck neurons diff --demo         # a copy in which L1/N5 learned to fire on D: it comes back as gained
+```
+
+Add `--html report.html --json report.json` to any of them for the reports.
+
+## validate: switch or readout?
+
+`NeuronBackend` wraps any Hugging Face causal LM and its tokenizer. Pass it to `validate` like any other backend.
+`backend.nodes(prompt, specs)` turns `"layer:neuron@position"` strings into nodes that carry their real activations
+(position `-1` is the last token).
+
+```python neurons
+from circuitcheck.neurons import toy
+from circuitcheck.validate import logit_diff, validate
+
+backend, model, tok = toy.demo()
+nodes = backend.nodes("capital of D", ["0:0@-1", "1:0@-1"])
+metric = logit_diff(backend.token_id("A"), backend.token_id("S"), "A", "S")
+report = validate(backend, "capital of D", nodes, metric=metric, counterfactual="capital of O")
+print([(g.name, g.verdict.value) for g in report.groups])
+# [('top-2', 'switch'), ('L0/0@11', 'switch'), ('L1/0@11', 'readout')]
+```
+
+Each intervention is a neuronkit edit at the node's position: ablation sets the neuron to 0, steering multiplies it by
+3, and the counterfactual patch gives it its value on the other prompt. The verdict rules and the report are the same
+as for transcoder features (see [the validator](/guides/validate)).
+
+### A neuron's subcircuit
+
+neuronkit traces what drove one firing: with the norm in front of the MLP frozen, every earlier head and neuron
+contributes an exact share of the activation. `subcircuit_group` keeps the `k` strongest earlier neurons as a group,
+so you can ask whether a neuron's drivers are themselves a switch:
+
+```python neurons
+from circuitcheck.neurons import toy
+from circuitcheck.validate import logit_diff, validate
+
+backend, model, tok = toy.demo()
+group, sc = backend.subcircuit_group("capital of D", "1:0@-1", k=1)   # the readout's drivers
+print([n.name() for n in group.nodes], round(sc.completeness, 3))      # ['L0/0@11'] 1.0
+metric = logit_diff(backend.token_id("A"), backend.token_id("S"))
+report = validate(backend, "capital of D", group.nodes, metric=metric, counterfactual="capital of O", groups=[group])
+print(report.groups[0].verdict.value)                                  # switch
+```
+
+The readout's only driver is the switch. So the graph-style reading "L1/N0 matters" is wrong, but the neuron does
+point at the one that does matter. The trace is direct-path: chains through several components are not followed.
+
+## label: does the description hold up?
+
+A label is only worth as much as its test. `label_neuron` writes a description of one pole from its strongest
+firings, or takes one you give it, and then tests it three ways:
+
+<Steps>
+  <Step title="Predict">
+    A judge gets the description and a shuffled mix of held-out firing excerpts and random windows of the corpus,
+    and says which ones fire. Scores: balanced accuracy and AUROC.
+  </Step>
+  <Step title="Simulate">
+    The judge predicts a 0-10 activation for every token of held-out excerpts. Those predictions, scaled to the
+    pole's p99.9 magnitude, are patched in for the real activations, and the result is compared with zero-ablating
+    the neuron on the same tokens: **recovered** = 1 - KL(simulated) / KL(ablated). 1.0 means the description
+    carries everything the neuron's activations carry there; 0.0 means it does no better than deleting the neuron.
+  </Step>
+  <Step title="Write (optional)">
+    With `n_write`, the judge writes texts meant to fire the pole, and the report says whether one beats the corpus
+    maximum.
+  </Step>
+</Steps>
+
+The trust score (`label.score`) is **recovered**: it is measured in the model's own output, so a description that
+only sounds right does not earn it. The excerpts the explainer saw are never scored. This runs neuronkit's
+`score_description`, which uses circuitcheck's excerpt format and simulation prompt, so feature labels and neuron
+labels are tested the same way.
+
+```python neurons
+from circuitcheck.neurons import label_neurons, toy
+
+model, tok = toy.model(), toy.CharTokenizer()
+labels = label_neurons(model, tok, toy.CORPUS, ["0:n0+", "1:n0+"], llm=toy.judge(), n_explain=4)
+for lab in labels:
+    print(lab.unit, lab.label, lab.predict_accuracy, lab.recovered)
+# 0:n0+ the letter D, wherever it appears 0.875 1.0
+# 1:n0+ the letter D, wherever it appears 0.8125 None
+
+wrong = label_neurons(model, tok, toy.CORPUS, ["0:n0+"], llm=toy.judge(), n_explain=4,
+                      descriptions={"0:n0+": "the letter q"})[0]
+print(wrong.recovered)  # 0.0: a wrong description recovers none of the damage
+```
+
+The readout's `recovered` is `None`, and its `ablation_kl` is about 0. Deleting it changes nothing, so there is no
+damage for a description to recover. The predict test alone would have scored its (correct) description well.
+
+`toy.judge()` is a scripted judge for the toy. On a real model, pass any circuitcheck LLM, for example
+`make_llm("anthropic")` (Claude Haiku 5.5, with a reply cache) or `make_llm("openai", "gpt-5-mini")`.
+
+## diff: which neurons did fine-tuning change?
+
+Fine-tuning updates the same weights, so neuron `L12/N345` exists before and after and can be compared directly.
+`diff_neurons` runs the same prompts through both models and gives every neuron one number per prompt. By default
+that number is its **tail rate**: the share of tokens where it fires beyond the before model's p99 or below its p1.
+The thresholds come from the before model and are used for both models, so a change in rate is a change in
+behaviour on a fixed scale. With `stat="mean"`, the number is the mean activation instead.
+
+The numbers then go through circuitcheck's [diff](/guides/diff): gained, lost, up and down statuses, the paired swap
+null with a Benjamini-Hochberg correction, bootstrap intervals, the split-half check and, with `control=`, the
+control-run contrast.
+
+```python neurons
+from circuitcheck.neurons import diff_neurons, toy
+
+before, tok = toy.model(), toy.CharTokenizer()
+after = toy.finetuned(before)  # L1/N5 learned to fire on D
+report = diff_neurons(before, after, tok, toy.DIFF_PROMPTS)
+print([(c.unit, c.status) for c in report.top[:1]], round(report.summary.change_p, 3))
+# [('1:5', 'gained')] 0.035
+```
+
+There is no transcoder caveat here, because no dictionary was trained on the base model. The report keeps two
+others: the thresholds come from the model before training, and a neuron that changed rate may also have changed
+meaning. Describe and validate gained neurons before calling them findings.
+
+## On a real model
+
+The neuron indices below are placeholders: pick yours from a probe, a graph, or a diff.
+
+```python gpu
+from transformers import AutoModelForCausalLM, AutoTokenizer
+
+from circuitcheck.labels import make_llm
+from circuitcheck.neurons import NeuronBackend, diff_neurons, label_neurons
+from circuitcheck.validate import logit_diff, validate
+
+model = AutoModelForCausalLM.from_pretrained("Qwen/Qwen2.5-0.5B-Instruct").eval()
+tok = AutoTokenizer.from_pretrained("Qwen/Qwen2.5-0.5B-Instruct")
+
+backend = NeuronBackend(model, tok)
+prompt = "Fact: the capital of the state containing Dallas is"
+nodes = backend.nodes(prompt, ["18:1203@-1", "21:477@-1"])
+metric = logit_diff(backend.token_id(" Austin"), backend.token_id(" Sacramento"), " Austin", " Sacramento")
+report = validate(backend, prompt, nodes, metric=metric,
+                  counterfactual="Fact: the capital of the state containing Oakland is")
+
+texts = [...]  # a few hundred documents
+labels = label_neurons(model, tok, texts, ["18:n1203+", "21:n477-"], llm=make_llm("anthropic"))
+
+tuned = AutoModelForCausalLM.from_pretrained("path/to/fine-tuned").eval()
+diff = diff_neurons(model, tuned, tok, texts[:16], layers=[16, 17, 18])
+```
+
+The same from the command line:
+
+```bash gpu
+circuitcheck neurons validate --model Qwen/Qwen2.5-0.5B-Instruct --prompt "Fact: the capital of the state containing Dallas is" --counterfactual "Fact: the capital of the state containing Oakland is" --neurons 18:1203@-1 --target " Austin" --contrast " Sacramento"
+circuitcheck neurons label --model Qwen/Qwen2.5-0.5B-Instruct --neurons 18:n1203+ --corpus texts.txt
+circuitcheck neurons diff --before Qwen/Qwen2.5-0.5B-Instruct --after path/to/fine-tuned --prompts prompts.txt --layers 16,17,18
+```
+
+<Tip>
+  Controls come from the layers of the neurons you test (pass `layers=` to `NeuronBackend` to change that). Every
+  neuron of those layers is a candidate, so a 0.5B model gives about 5,000 candidates per layer and position.
+</Tip>
+
+## How it relates to neuronkit
+
+[neuronkit](https://github.com/albertlieyingadrian/neuronkit) does the neuron measurements: finding the MLP sites of
+any dense or mixture-of-experts Hugging Face model, capturing and editing activations with plain PyTorch hooks,
+per-neuron percentiles, subcircuit traces and description scores. circuitcheck adds what it adds to circuit-tracer:
+matched controls with printed verdict rules, a statistically checked diff, and trust scores reported next to every
+label. The two share code instead of copying it. neuronkit's judge steps use circuitcheck's excerpt format and
+prompts, and circuitcheck imports neuronkit only inside `circuitcheck.neurons`, so the base install stays light.

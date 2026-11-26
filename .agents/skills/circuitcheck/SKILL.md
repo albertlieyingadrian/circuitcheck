@@ -21,6 +21,7 @@ cached model replies let every tool run offline. Real models need circuit-tracer
 | "What does feature L:F do?" "Label these features" | labels | `circuitcheck label` |
 | "Does the lens read predict steering?" "Is this label right?" | lens | `circuitcheck lens` |
 | "Do the graph's edges match the model's wiring?" | edges | `circuitcheck edges` |
+| The same questions on raw MLP neurons, or a model with no transcoders | neurons | `circuitcheck neurons validate\|label\|diff` (each has `--demo`) |
 
 ## Start here (offline, instant, pre-approved)
 
