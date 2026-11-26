@@ -9,11 +9,18 @@ zero), so each position only sees its own token, and a few neurons are set by ha
 - `L0/N1` is the counterfactual's own switch: it fires on `O` and writes `S` (Sacramento);
 - **readout** `L1/N0` fires hard on `D` too, because it reads the Austin direction the switch wrote, but it writes
   into a direction nothing downstream reads: active, attributed, and causally idle;
+- **relay**: `L0/N2` fires on `T` and writes a direction the unembedding cannot see, which only `L1/N7` reads;
+  `L1/N7`, whose gate is always open, then writes Austin. So `L0/N2`'s logit lens reads nothing, while its
+  Jacobian lens and its steering both point at `A`: the case the Jacobian lens is for;
 - every other neuron is small random noise, which the controls are drawn from.
 
+The unembedding reads the Austin and Sacramento directions for every token (most weakly), so a write along them
+has a full ranking over the vocabulary for the lens check to compare with steering.
+
 So on `"capital of D"`, with the counterfactual `"capital of O"` and the metric logit(A) - logit(S), `validate`
-should call `L0/N0` a switch and `L1/N0` a readout. `finetuned()` returns a copy in which `L1/N5` has learned to
-fire on `D`, for the neuron diff, and `judge()` is a scripted labeller for the label checks.
+should call `L0/N0` a switch and `L1/N0` a readout, and `neuron_lens` should read the switch's write as `A`.
+`finetuned()` returns a copy in which `L1/N5` has learned to fire on `D`, for the neuron diff, and `judge()` is a
+scripted labeller for the label checks.
 """
 
 from __future__ import annotations
@@ -29,12 +36,15 @@ from circuitcheck.labels.providers import ScriptedLLM
 HIDDEN = 32
 N_NEURONS = 16
 D_DIM, O_DIM, AUSTIN_DIM, SACRAMENTO_DIM, DEAD_DIM = 0, 1, 2, 3, 4
+RELAY_DIM, T_DIM, BIAS_DIM = 5, 6, 7  # carved out of the noise dims after the random draws, so the noise is unchanged
 NOISE_DIMS = range(5, HIDDEN)
 
 SWITCH = (0, 0)
 CF_SWITCH = (0, 1)
 READOUT = (1, 0)
 GAINED = (1, 5)
+RELAY_SOURCE = (0, 2)
+RELAY = (1, 7)
 
 PROMPT = "capital of D"
 COUNTERFACTUAL = "capital of O"
@@ -57,6 +67,15 @@ CORPUS = [
     "a quiet street, a warm cup of tea and a good book make a fine day.",
     "Dana and Dmitri Danced until Dawn at the Downtown Dance hall.",
     "the school bus stops at the corner of the main road every morning.",
+]
+
+LENS_CONTEXTS = [
+    "Tom and Dana Took the Train to Dallas on Tuesday, then walked home.",
+    "the market in Toledo sells bread and Dates; David buys Tea there.",
+    "a quiet Day by the river: Ted reads, Dot paints, the dog sleeps.",
+    "Two Ducks and Ten geese swim past the Dock while the sun goes Down.",
+    "Tina Drew a map of the town, with Trees, roads and a Deep blue lake.",
+    "on Thursday the Doctor Told the class about Teeth and Daily care.",
 ]
 
 DIFF_PROMPTS = [
@@ -145,6 +164,26 @@ def model(seed: int = 0) -> Any:
         head[ord(TARGET), AUSTIN_DIM] = 2.0
         head[ord(CONTRAST), :] = 0.0
         head[ord(CONTRAST), SACRAMENTO_DIM] = 2.0
+        # every token reads the answer directions a little (drawn last, so earlier draws are unchanged)
+        head[:, [AUSTIN_DIM, SACRAMENTO_DIM]] += rand(128, 2, scale=0.2)
+        head[ord(TARGET), SACRAMENTO_DIM] = 0.0
+        head[ord(CONTRAST), AUSTIN_DIM] = 0.0
+        # the relay: a T detector writes a direction only L1/N7 reads, and L1/N7 writes Austin
+        carved = [RELAY_DIM, T_DIM, BIAS_DIM]
+        for w in (emb, head):
+            w[:, carved] = 0.0
+        emb[ord("T"), :] = 0.0
+        emb[ord("T"), T_DIM] = 3.0
+        emb[:, BIAS_DIM] = 1.0  # a constant component every token carries, so the relay's gate is always open
+        m.model.embed_tokens.weight.copy_(emb)
+        for layer in m.model.layers:
+            for w in (layer.mlp.gate_proj.weight, layer.mlp.up_proj.weight):
+                w[:, carved] = 0.0
+            layer.mlp.down_proj.weight[carved, :] = 0.0
+        _plant(l0, RELAY_SOURCE[1], read=T_DIM, write=RELAY_DIM, write_scale=0.4)
+        _plant(l1, RELAY[1], read=RELAY_DIM, write=AUSTIN_DIM, write_scale=0.4)
+        l1.gate_proj.weight[RELAY[1], :] = 0.0
+        l1.gate_proj.weight[RELAY[1], BIAS_DIM] = 2.0  # gate open on every token: the relay is linear in its input
         m.lm_head.weight.copy_(head)
     return m
 
@@ -177,6 +216,12 @@ def demo(seed: int = 0) -> tuple[Any, Any, CharTokenizer]:
     tok = CharTokenizer()
     m = model(seed)
     return NeuronBackend(m, tok), m, tok
+
+
+def lens_demo_poles() -> list[str]:
+    """Poles for the lens demo: the switch, the relay source, and the switch's unused negative pole (its gate is
+    never open with that sign)."""
+    return [f"{SWITCH[0]}:n{SWITCH[1]}+", f"{RELAY_SOURCE[0]}:n{RELAY_SOURCE[1]}+", f"{SWITCH[0]}:n{SWITCH[1]}-"]
 
 
 def demo_specs() -> list[str]:

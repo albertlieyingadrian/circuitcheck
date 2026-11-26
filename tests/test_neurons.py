@@ -236,8 +236,8 @@ def test_summaries_mean_stat(planted) -> None:
     rates = neuron_summaries(m, tok, toy.DIFF_PROMPTS[:2], thresholds=th)
     assert all(0 < v <= 1 for g in rates for v in g.features.values())
     means = neuron_summaries(m, tok, toy.DIFF_PROMPTS[:2], stat="mean", layers=[0])
-    # every layer-0 neuron except the Oakland switch, which is exactly 0 on a prompt without an O (absent = 0)
-    assert set(means[0].features) == {f"0:{i}" for i in range(toy.N_NEURONS)} - {"0:1"}
+    # every layer-0 neuron except the Oakland switch and the T detector, exactly 0 on a prompt without an O or a T
+    assert set(means[0].features) == {f"0:{i}" for i in range(toy.N_NEURONS)} - {"0:1", "0:2"}
     with pytest.raises(ValueError):
         neuron_summaries(m, tok, toy.DIFF_PROMPTS[:1])
 
@@ -270,3 +270,100 @@ def test_cli_demos(tmp_path) -> None:
     r = runner.invoke(app, ["neurons", "diff", "--demo"])
     assert r.exit_code == 0, r.output
     assert "1:5" in r.output and "gained" in r.output
+
+
+# ---------------------------------------------------------------- lens
+
+
+@pytest.fixture(scope="module")
+def lens_backend(planted):
+    from circuitcheck.neurons import NeuronLensBackend
+
+    _, m, tok = planted
+    return NeuronLensBackend(m, tok, toy.LENS_CONTEXTS, ctx_len=48, skip_first=4)
+
+
+@pytest.fixture(scope="module")
+def lens_report(lens_backend):
+    from circuitcheck.neurons import neuron_lens
+
+    return neuron_lens(lens_backend, toy.lens_demo_poles(), n_random=16, n_boot=500)
+
+
+def _unit(report, name: str):
+    return next(u for u in report.units if u.unit.name() == name)
+
+
+def test_lens_reads_the_switch_as_its_answer(lens_report) -> None:
+    sw = _unit(lens_report, "L0/n0+")
+    for lens in ("logit", "jacobian"):
+        assert sw.scores[lens].top[0] == toy.TARGET and sw.scores[lens].rho > 0.9
+    assert sw.steer_top[0] == toy.TARGET and not sw.flags
+
+
+def test_jacobian_lens_sees_through_the_relay(lens_report) -> None:
+    """The relay source writes a direction the unembedding cannot see: the logit lens reads nothing and is flagged,
+    while the Jacobian lens reads what its steering does (A, through L1/N7)."""
+    relay = _unit(lens_report, "L0/n2+")
+    assert abs(relay.scores["logit"].rho) < 0.1 and any("lens misses (logit)" in f for f in relay.flags)
+    assert relay.scores["jacobian"].top[0] == toy.TARGET and relay.scores["jacobian"].rho > 0.9
+    assert relay.steer_top[0] == toy.TARGET
+
+
+def test_gate_closed_poles_are_flagged(lens_report, lens_backend) -> None:
+    neg = _unit(lens_report, "L0/n0-")
+    assert any(f.startswith("gate closed") for f in neg.flags)
+    assert lens_backend.open_rate(0, 0, +1) > 0 and lens_backend.open_rate(0, 0, -1) == 0
+    assert any("gate closed" in r for r in lens_report.rules)
+
+
+def test_logit_lens_folds_in_the_final_norm_gain(lens_backend, planted) -> None:
+    from circuitcheck.lens import LensUnit
+
+    _, m, _ = planted
+    u = LensUnit(layer=0, index=3, kind="neuron", sign=-1)
+    w = lens_backend.write_vectors([u])
+    want = (m.lm_head.weight.detach() * m.model.norm.weight.detach()[None, :]).numpy() @ w[0]
+    np.testing.assert_allclose(lens_backend.lens_logits(0, w, "logit")[0], want, rtol=1e-5, atol=1e-6)
+    np.testing.assert_allclose(w[0], -nk.sites(m)[0].down_cols()[3].detach().numpy(), rtol=1e-6)
+
+
+def test_jacobian_fallback_matches_neuronkit(lens_backend) -> None:
+    """The exact JVP (used when neuronkit has no readout module) agrees with neuronkit's finite difference."""
+    readout = pytest.importorskip("neuronkit.readout")
+    v = torch.tensor(lens_backend.write_vectors([_pole(toy.RELAY_SOURCE)])[0])
+    ours = lens_backend.jacobian_jvp(0, v)
+    theirs = readout.jacobian_direction(lens_backend.model, lens_backend.tokenizer, 0, v, lens_backend.texts)
+    assert torch.nn.functional.cosine_similarity(ours, theirs.float(), dim=0) > 0.999
+    # the relay carries the write on to the Austin direction to first order, not only through a second-order term
+    assert abs(float(ours[toy.AUSTIN_DIM])) > 0.05
+    assert torch.allclose(ours, theirs.float(), rtol=1e-2, atol=1e-3)
+
+
+def test_gate_fallback_matches_neuronkit(planted) -> None:
+    from circuitcheck.neurons import NeuronLensBackend
+
+    _, m, tok = planted
+    b = NeuronLensBackend(m, tok, toy.LENS_CONTEXTS, ctx_len=48, skip_first=4)
+    if getattr(nk, "gate_open", None) is not None:
+        b._open.clear()
+        with_nk = [b.open_rate(0, i, s) for i in range(4) for s in (1, -1)]
+        g = b._gate_preacts(0)
+        assert torch.equal(b._open[0][1].bool(), (g > 0).to(b._open[0][1].device))
+        assert with_nk[0] > 0
+
+
+def _pole(unit: tuple[int, int], sign: int = 1):
+    from circuitcheck.lens import LensUnit
+
+    return LensUnit(layer=unit[0], index=unit[1], kind="neuron", sign=sign)
+
+
+def test_cli_lens_demo() -> None:
+    from typer.testing import CliRunner
+
+    from circuitcheck.cli import app
+
+    r = CliRunner().invoke(app, ["neurons", "lens", "--demo", "--n-boot", "200"])
+    assert r.exit_code == 0, r.output
+    assert "L0/n2+" in r.output and "gate closed" in r.output and "lens misses (logit)" in r.output

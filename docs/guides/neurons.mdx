@@ -1,6 +1,6 @@
 ---
 title: "Neurons"
-description: "Run validate, label and diff on a model's raw MLP neurons and their subcircuits, with no transcoders."
+description: "Run validate, label, lens and diff on a model's raw MLP neurons and their subcircuits, with no transcoders."
 ---
 
 circuitcheck's checks were built for transcoder features in circuit-tracer graphs. They work just as well on the
@@ -48,10 +48,13 @@ letters stand for cities: `D` is Dallas, `O` is Oakland, `A` is Austin and `S` i
 - `L0/N0` is a **switch**: it fires on `D` and writes the direction the output reads as `A`.
 - `L1/N0` is a **readout**: it fires just as hard on `D`, because it reads what the switch wrote, but it writes into
   a direction nothing downstream uses.
+- `L0/N2` is a **relay source**: it fires on `T` and writes a direction the unembedding cannot see. Only `L1/N7` reads
+  that direction, and `L1/N7` writes `A`.
 
 ```bash neurons
 circuitcheck neurons validate --demo     # L0/0 is a switch, L1/0 a readout
 circuitcheck neurons label --demo        # each description, with the share of ablation damage it recovers
+circuitcheck neurons lens --demo         # each pole's lens read against its steering; the relay needs the Jacobian lens
 circuitcheck neurons diff --demo         # a copy in which L1/N5 learned to fire on D: it comes back as gained
 ```
 
@@ -148,6 +151,57 @@ damage for a description to recover. The predict test alone would have scored it
 `toy.judge()` is a scripted judge for the toy. On a real model, pass any circuitcheck LLM, for example
 `make_llm("anthropic")` (Claude Haiku 5.5, with a reply cache) or `make_llm("openai", "gpt-5-mini")`.
 
+## lens: is a neuron a steering vector you can read?
+
+[Returning to the Neuron Basis for Interpretability](https://alignment.anthropic.com/2026/neuron-basis-theory/) reads
+a SwiGLU neuron as a **context-gated steering vector**. When it fires at `a`, it adds `a × w` to the residual stream,
+where `w` is its column of the down projection. The gate `g · x` decides *whether* it fires, and the sign of
+`u · x` decides *which way*: along `+w` or along `-w`. So each pole is a fixed direction that can be read from the
+weights alone, with a lens. The [applications post](https://alignment.anthropic.com/2026/neuron-basis-applications/)
+uses those reads to find and steer neurons without labels.
+
+circuitcheck's [lens check](/guides/lens) tests that reading. Does the lens read of `±w` predict what adding `c × w`
+actually does to the next-token distribution, better than random neurons of the same layer pushed at the same write
+norm? `NeuronLensBackend` provides the neuron version of each piece:
+
+| Piece | On a neuron pole |
+|---|---|
+| write | `sign × w` (the down-projection column), one pole at a time |
+| `logit` lens | the unembedding of `w`, with the final norm's gain folded in: `W_U (γ ⊙ w)` |
+| `jacobian` lens | the same read of `J_L w`, where `J_L` is the Jacobian of the last layer's residual with respect to the residual after layer L, at the same token, averaged over the contexts |
+| steering | `c × w` added to layer L's output at every position of a few neutral contexts: what the neuron does when it fires at `c` |
+| controls | random neurons and signs of the same layer, pushed at the same write norm |
+| gate rule | a pole counts only where its gate is open (`g · x > 0`) with that sign; a tested pole that never fires that way on the contexts is flagged `gate closed` |
+
+```python neurons
+from circuitcheck.neurons import NeuronLensBackend, neuron_lens, toy
+
+model, tok = toy.model(), toy.CharTokenizer()
+backend = NeuronLensBackend(model, tok, toy.LENS_CONTEXTS, ctx_len=48, skip_first=4)
+report = neuron_lens(backend, ["0:n0+", "0:n2+", "0:n0-"], n_random=16)
+for u in report.units:
+    print(u.unit.name(), {k: (round(s.rho, 2), s.top[0]) for k, s in u.scores.items()}, u.steer_top[0], len(u.flags))
+# L0/n0+ {'logit': (1.0, 'A'), 'jacobian': (1.0, 'A')} A 0
+# L0/n2+ {'logit': (0.0, '\x00'), 'jacobian': (1.0, 'A')} A 1
+# L0/n0- {'logit': (1.0, 'H'), 'jacobian': (1.0, 'H')} H 1
+```
+
+- The **switch** `L0/n0+` writes the Austin direction, so both lenses read `A`, and so does its steering.
+- The **relay source** `L0/n2+` writes a direction the unembedding cannot see. Its logit lens reads nothing and is
+  flagged `lens misses (logit)`. Its Jacobian lens follows the write through `L1/N7` and reads `A`, which is what
+  steering with it does. This is the case the Jacobian lens is for: later layers transform what a neuron writes.
+- The switch's **negative pole** `L0/n0-` reads fine as a direction, but it is flagged `gate closed`: on these
+  contexts the neuron never fires with that sign, so the model never pushes along `-w`.
+
+The Jacobian lens uses neuronkit's `readout.jacobian_direction` (a finite difference at the last token of each
+context) when the installed neuronkit has it, and an exact Jacobian-vector product otherwise. The two agree, and a
+test checks it.
+
+<Note>
+  A SwiGLU neuron is quadratic at zero (`silu(g) × u`), so its Jacobian vanishes where it is silent. A Jacobian lens
+  only sees through a later neuron whose gate is open on the contexts. Pick contexts like the ones you care about.
+</Note>
+
 ## diff: which neurons did fine-tuning change?
 
 Fine-tuning updates the same weights, so neuron `L12/N345` exists before and after and can be compared directly.
@@ -167,7 +221,7 @@ before, tok = toy.model(), toy.CharTokenizer()
 after = toy.finetuned(before)  # L1/N5 learned to fire on D
 report = diff_neurons(before, after, tok, toy.DIFF_PROMPTS)
 print([(c.unit, c.status) for c in report.top[:1]], round(report.summary.change_p, 3))
-# [('1:5', 'gained')] 0.035
+# [('1:5', 'gained')] 0.019
 ```
 
 There is no transcoder caveat here, because no dictionary was trained on the base model. The report keeps two
@@ -182,7 +236,7 @@ The neuron indices below are placeholders: pick yours from a probe, a graph, or 
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from circuitcheck.labels import make_llm
-from circuitcheck.neurons import NeuronBackend, diff_neurons, label_neurons
+from circuitcheck.neurons import NeuronBackend, NeuronLensBackend, diff_neurons, label_neurons, neuron_lens
 from circuitcheck.validate import logit_diff, validate
 
 model = AutoModelForCausalLM.from_pretrained("Qwen/Qwen2.5-0.5B-Instruct").eval()
@@ -200,6 +254,9 @@ labels = label_neurons(model, tok, texts, ["18:n1203+", "21:n477-"], llm=make_ll
 
 tuned = AutoModelForCausalLM.from_pretrained("path/to/fine-tuned").eval()
 diff = diff_neurons(model, tuned, tok, texts[:16], layers=[16, 17, 18])
+
+lens_backend = NeuronLensBackend(model, tok, texts[:8])
+lens = neuron_lens(lens_backend, ["18:n1203+", "18:n1203-"], n_random=32)
 ```
 
 The same from the command line:
@@ -207,6 +264,7 @@ The same from the command line:
 ```bash gpu
 circuitcheck neurons validate --model Qwen/Qwen2.5-0.5B-Instruct --prompt "Fact: the capital of the state containing Dallas is" --counterfactual "Fact: the capital of the state containing Oakland is" --neurons 18:1203@-1 --target " Austin" --contrast " Sacramento"
 circuitcheck neurons label --model Qwen/Qwen2.5-0.5B-Instruct --neurons 18:n1203+ --corpus texts.txt
+circuitcheck neurons lens --model Qwen/Qwen2.5-0.5B-Instruct --neurons 18:n1203+,18:n1203- --contexts texts.txt
 circuitcheck neurons diff --before Qwen/Qwen2.5-0.5B-Instruct --after path/to/fine-tuned --prompts prompts.txt --layers 16,17,18
 ```
 

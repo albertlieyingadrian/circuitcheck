@@ -46,8 +46,8 @@ class NeuronLabel(FeatureLabel):
     a_ref: float | None = Field(None, description="the pole's p99.9 magnitude, the scale simulated levels map onto")
     ablation_kl: float | None = Field(
         None,
-        description="mean KL(base || ablated) over the simulated windows; near 0 means the neuron does nothing there, "
-        "so there is no damage to recover and `recovered` is None",
+        description="mean KL(base || ablated) over the simulated windows; below `min_ablation_kl` the neuron does "
+        "nothing there, so there is no damage to recover and `recovered` is None",
     )
     n_windows: int = Field(0, description="held-out windows whose simulation was patched in")
     unparsed: int = Field(0, description="judge replies that could not be parsed")
@@ -96,11 +96,13 @@ def label_neuron(
     window: int = 32,
     max_len: int = 256,
     seed: int = 0,
+    min_ablation_kl: float = 1e-6,
 ) -> NeuronLabel:
     """Describe one neuron pole from `texts` (or take `description` as given) and test the description.
 
     `llm` writes the description; `judge` (default: the same model) predicts and simulates. The excerpts the
-    explainer saw are never scored.
+    explainer saw are never scored. When zero-ablating the neuron on the simulated windows changes the output by a
+    mean KL below `min_ablation_kl`, there is no damage to recover and `recovered` is None.
     """
     import neuronkit as nk
     import torch
@@ -151,6 +153,8 @@ def label_neuron(
     except Exception as e:  # one bad neuron or reply should not sink a batch; the error is kept on the record
         return failed(f"{type(e).__name__}: {e}")
     acc, auc = _finite(sc.predict_accuracy), _finite(sc.predict_auroc)
+    ablation_kl = sum(w.ablate for w in sc.windows) / len(sc.windows) if sc.windows else None
+    recovered = _finite(sc.recovered) if ablation_kl is not None and ablation_kl >= min_ablation_kl else None
     detection = None
     if acc is not None:
         detection = DetectionScore(
@@ -173,12 +177,12 @@ def label_neuron(
         n_explain=len(shown),
         predict_accuracy=acc,
         predict_auroc=auc,
-        recovered=_finite(sc.recovered),
+        recovered=recovered,
         write_best=sc.write_best,
         write_beats_reference=sc.write_beats_reference,
         reference_max=reference_max,
         a_ref=a_ref,
-        ablation_kl=sum(w.ablate for w in sc.windows) / len(sc.windows) if sc.windows else None,
+        ablation_kl=ablation_kl,
         n_windows=len(sc.windows),
         unparsed=sc.unparsed,
     )

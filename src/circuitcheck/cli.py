@@ -6,7 +6,7 @@ circuitcheck validate --demo --html validate.html
 circuitcheck label --neuronpedia gemma-2-2b/20-gemmascope-transcoder-16k --features 15589,4012 --html labels.html
 circuitcheck lens --demo --html lens.html
 circuitcheck edges --demo --html edges.html
-circuitcheck neurons validate --demo --html neurons.html     (also: neurons label, neurons diff)
+circuitcheck neurons validate --demo --html neurons.html     (also: neurons label, lens, diff)
 """
 
 from __future__ import annotations
@@ -372,7 +372,7 @@ def edges(
 
 neurons_app = typer.Typer(
     no_args_is_help=True,
-    help="validate, label and diff on raw MLP neurons (no transcoders), through neuronkit (install the neurons extra).",
+    help="validate, label, lens and diff on raw MLP neurons, no transcoders, via neuronkit (the neurons extra).",
 )
 app.add_typer(neurons_app, name="neurons")
 
@@ -495,6 +495,60 @@ def neurons_label(
         acc = "n/a" if lab.predict_accuracy is None else f"{lab.predict_accuracy:.2f}"
         typer.echo(f"  {lab.unit:>10}  recovered {rec}  predict {acc}  {lab.label or lab.error}")
     _write(json.dumps([x.model_dump() for x in labs], indent=1), render_neuron_labels(labs), json_out, html)
+
+
+@neurons_app.command("lens")
+def neurons_lens(
+    demo: Annotated[bool, typer.Option(help="run on the planted toy transformer (CPU, no downloads)")] = False,
+    model: Annotated[str | None, typer.Option(help="HF model id")] = None,
+    neurons: Annotated[str | None, typer.Option(help="comma-separated poles, e.g. 12:n345+,14:n880-")] = None,
+    contexts: Annotated[Path | None, typer.Option(help="text file, one neutral context per line")] = None,
+    ctx_len: int = 64,
+    skip_first: int = 8,
+    n_random: int = 16,
+    dose_scale: float = 1.0,
+    n_boot: int = 2000,
+    seed: int = 0,
+    device: Annotated[str | None, typer.Option(help="cuda, mps or cpu")] = None,
+    html: Annotated[Path | None, typer.Option(help="write the HTML report here")] = None,
+    json_out: Annotated[Path | None, typer.Option("--json", help="write the JSON report here")] = None,
+) -> None:
+    """Does each neuron pole's lens read (logit or Jacobian lens of its ±W_down column) predict its steering?"""
+    from circuitcheck.neurons import NeuronLensBackend, neuron_lens
+    from circuitcheck.report import render_lens
+
+    m: Any
+    tok: Any
+    if demo:
+        from circuitcheck.neurons import toy
+
+        m, tok, texts = toy.model(), toy.CharTokenizer(), toy.LENS_CONTEXTS
+        poles = toy.lens_demo_poles()
+        ctx_len, skip_first = min(ctx_len, 48), min(skip_first, 4)
+    else:
+        if not (model and neurons):
+            raise typer.BadParameter("give --demo, or --model and --neurons")
+        m, tok = _hf(model, device)
+        texts = _lines(contexts) if contexts else DEFAULT_CONTEXTS
+        poles = [p.strip() for p in neurons.split(",")]
+    backend = NeuronLensBackend(m, tok, texts, ctx_len=ctx_len, skip_first=skip_first)
+    rep = neuron_lens(
+        backend,
+        poles,
+        n_random=n_random,
+        dose_scale=dose_scale,
+        n_boot=n_boot,
+        seed=seed,
+        progress=None if demo else typer.echo,
+    )
+    for u in rep.units:
+        reads = "  ".join(f"{k} rho {s.rho:+.2f} reads {s.top[:3]}" for k, s in u.scores.items())
+        typer.echo(f"  {u.unit.name():>9}  {reads}  steering raises {u.steer_top[:3]}")
+        for flag in u.flags:
+            typer.echo(f"             flagged: {flag}")
+    for s in rep.summary.values():
+        typer.echo(f"  {s.verdict}")
+    _write(rep.model_dump_json(indent=1), render_lens(rep, title="Neuron lens reads against steering"), json_out, html)
 
 
 @neurons_app.command("diff")
